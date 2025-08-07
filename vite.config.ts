@@ -4,4 +4,44 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 5173,
+    proxy: {
+      // Proxy API calls to backend server
+      '/api': {
+        target: 'https://netsoftdev.com/psei-api_new',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.log('Proxy error:', err.message);
+          });
+          proxy.on('proxyReq', (_proxyReq, req) => {
+            console.log('Sending Request to Target:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('Received Response:', proxyRes.statusCode, req.url);
+          });
+        },
+      },
+      // Direct proxy for psei-api_new path
+      // '/psei-api_new': {
+      //   target: 'https://netsoftdev.com',
+      //   changeOrigin: true,
+      //   secure: false,
+      //   configure: (proxy) => {
+      //     proxy.on('error', (err) => {
+      //       console.log('psei-api proxy error', err);
+      //     });
+      //     proxy.on('proxyReq', (proxyReq, req) => {
+      //       console.log('PSEI API - Sending Request:', req.method, req.url);
+      //     });
+      //     proxy.on('proxyRes', (proxyRes, req) => {
+      //       console.log('PSEI API - Response:', proxyRes.statusCode, req.url);
+      //     });
+      //   },
+      // }
+    }
+  }
 })
