@@ -70,3 +70,7 @@ body {
 .fc-multimonth-title span{
   display: inline-block;
 }
+
+.fc-more-link {
+  text-align: center;
+} 

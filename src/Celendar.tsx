@@ -2,34 +2,84 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
-import type { EventApi, EventClickArg } from "@fullcalendar/core";
+import type { EventApi, EventClickArg, MoreLinkArg } from "@fullcalendar/core";
 import { useRef, useState } from "react";
-import { Modal, Typography, Tag, Space, Tooltip } from "antd";
-import { CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import {  Tooltip } from "antd";
 import dayjs from "dayjs";
 
-const { Title, Text } = Typography;
+ 
+
+ 
 const events = [
   {
     id: "1",
     title: "Team Meeting",
     start: new Date(), // Today
     end: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
-    color: "#9f7aea",
+    color: "#FFA500",
   },
- 
   {
     id: "2b",
     title: "Client Call",
     start: new Date(), // Today - another event same day
+    color: "#FFA500",
+  },
+  {
+    id: "extra1",
+    title: "Morning Standup",
+    start: new Date(), // Today
+    color: "#3788d8",
+  },
+  {
+    id: "extra2",
+    title: "Project Review",
+    start: new Date(), // Today
+    color: "#48bb78",
+  },
+  {
+    id: "extra3",
+    title: "Design Session",
+    start: new Date(), // Today
+    color: "#f56565",
+  },
+  {
+    id: "extra4",
+    title: "Code Review",
+    start: new Date(), // Today
+    color: "#ed8936",
+  },
+  {
+    id: "extra5",
+    title: "Team Lunch",
+    start: new Date(), // Today
     color: "#9f7aea",
+  },
+  {
+    id: "extra6",
+    title: "Sprint Planning",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra7",
+    title: "Client Demo",
+    start: dayjs("2025-08-15 08:00").toDate(),
+    end : dayjs("2025-08-15 09:00").toDate(),
+    color: "#d69e2e",
+  },
+  {
+    id: "extra8",
+    title: "Bug Triage",
+    start: dayjs("2025-08-15 09:00").toDate(),
+    end : dayjs("2025-08-15 10:00").toDate(),
+    color: "#e53e3e",
   },
   {
     id: "3",
     title: "Code Review",
     start: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // Tomorrow
     end: new Date(new Date().getTime() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000), // 1 hour
-    color: "#9f7aea",
+    color: "#FFA500",
   },
   {
     id: "4",
@@ -38,48 +88,48 @@ const events = [
     end: new Date(
       new Date().setDate(new Date().getDate() + 2) + 90 * 60 * 1000
     ), // 1.5 hours
-    color: "#9f7aea",
+    color: "#FFA500",
   },
   {
     id: "4b",
     title: "Design Review",
     start: new Date(new Date().setDate(new Date().getDate() + 2)), // Day after tomorrow - same day
-    color: "#9f7aea",
+    color: "#FFA500",
   },
   {
     id: "5",
     title: "Meeting 1",
     start: dayjs("2025-08-11 15:00").toDate(),
     end: dayjs("2025-08-11 16:00").toDate(),
-    color: "#9f7aea",
+    color: "#FFA500",
   },
   {
     id: "6",
     title: "Meeting 2",
     start: dayjs("2025-08-11 14:00").toDate(),
     end: dayjs("2025-08-11 13:00").toDate(),
-    color: "#9f7aea",
+    color: "#FFA500",
   },
     {
     id: "7",
     title: "Meeting 3",
     start: dayjs("2025-08-11 13:00").toDate(),
     end: dayjs("2025-08-11 14:00").toDate(),
-    color: "#9f7aea",
+    color: "#FFA500",
   },
    {
     id: "8",
     title: "Meeting 4",
     start: dayjs("2025-08-11 16:00").toDate(),
     end: dayjs("2025-08-11 16:30").toDate(),
-    color: "#9f7aea",
+    color: "#FFA500",
   },
   {
     id: "9",
     title: "Meeting 5",
     start: dayjs("2025-08-11 16:30").toDate(),
     end: dayjs("2025-08-11 17:00").toDate(),
-    color: "#9f7aea",
+    color: "#FFA500",
   },
 
 
@@ -108,8 +158,7 @@ const events = [
 
 export default function Calendar() {
   const calendarRef = useRef<FullCalendar>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null);
+ 
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
 
@@ -182,55 +231,11 @@ export default function Calendar() {
     }
   };
 
-  const handleEventClick = (info: EventClickArg) => {
-    setSelectedEvent(info.event);
-    setModalVisible(true);
-  };
+ 
 
+ 
   // Function to get the color of events for a specific date
-  const getEventColorForDate = (date: Date) => {
-    const calendarApi = calendarRef.current?.getApi();
-    if (!calendarApi) return "#3788d8";
-
-    const apiEvents = calendarApi.getEvents();
-    const dayStart = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-    );
-    const dayEnd = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      23,
-      59,
-      59
-    );
-
-    // Find events on this specific day
-    const dayEvents = apiEvents.filter((event) => {
-      const eventStart = event.start;
-      const eventEnd = event.end || event.start;
-      if (!eventStart) return false;
-
-      return eventStart <= dayEnd && (!eventEnd || eventEnd >= dayStart);
-    });
-
-    // Try to get color from various sources
-    if (dayEvents.length > 0) {
-      const firstEvent = dayEvents[0];
-      return (
-        firstEvent.backgroundColor ||
-        firstEvent.borderColor ||
-        firstEvent.extendedProps?.color ||
-        // Fallback to original events array
-        events.find((e) => e.id === firstEvent.id)?.color ||
-        "#3788d8"
-      );
-    }
-
-    return "#3788d8";
-  };
+ 
 
   // Function to customize more links after calendar render
   const customizeMoreLinks = () => {
@@ -256,17 +261,21 @@ export default function Calendar() {
           const dateStr = dayCell.getAttribute("data-date");
           if (!dateStr) return;
 
-          const date = new Date(dateStr + "T00:00:00");
-          const eventColor = getEventColorForDate(date);
+          // const date = new Date(dateStr + "T00:00:00");
+          // const eventColor = getEventColorForDate(date);
 
           if (count === 1) {
             // Single event: show just a colored dot
-            linkElement.innerHTML = `<span class="custom-single-event-dot" style="background-color: ${eventColor}"></span>`;
+            // linkElement.innerHTML = `<span class="custom-single-event-dot" style="background-color: ${eventColor}"></span>`;
+            linkElement.innerHTML = `   <span class="custom-more-events">
+               
+                <span class="custom-more-text">+ ${count} more</span>
+              </span>`;
           } else {
             // Multiple events: show dot with text
             linkElement.innerHTML = `
               <span class="custom-more-events">
-                <span class="custom-more-dot" style="background-color: ${eventColor}"></span>
+               
                 <span class="custom-more-text">+ ${count} more</span>
               </span>
             `;
@@ -409,6 +418,7 @@ export default function Calendar() {
           display: inline-flex;
           align-items: center;
           gap: 4px;
+          text-align: center;
           cursor: pointer;
           padding: 1px 4px;
           border-radius: 10px;
@@ -430,7 +440,7 @@ export default function Calendar() {
         
         .custom-more-text {
           font-size: 10px;
-          color: #666;
+          color: #fff;
           white-space: nowrap;
           font-weight: 500;
         }
@@ -448,6 +458,129 @@ export default function Calendar() {
           color: #1890ff;
           text-decoration: none;
         }
+
+        /* Week view AM/PM background styling */
+        // .fc-timegrid-slots .fc-timegrid-slot {
+        //   position: relative;
+        // }
+
+        /* AM hours (6:00 AM to 11:59 AM) - Light blue background */
+        .fc-timegrid-slot[data-time="06:00:00"],
+        .fc-timegrid-slot[data-time="06:30:00"],
+        .fc-timegrid-slot[data-time="07:00:00"],
+        .fc-timegrid-slot[data-time="07:30:00"],
+        .fc-timegrid-slot[data-time="08:00:00"],
+        .fc-timegrid-slot[data-time="08:30:00"],
+        .fc-timegrid-slot[data-time="09:00:00"],
+        .fc-timegrid-slot[data-time="09:30:00"],
+        .fc-timegrid-slot[data-time="10:00:00"],
+        .fc-timegrid-slot[data-time="10:30:00"],
+        .fc-timegrid-slot[data-time="11:00:00"],
+        .fc-timegrid-slot[data-time="11:30:00"] {
+          background-color: rgba(173, 216, 230, 0.15) !important; /* Light blue for AM */
+        }
+
+        /* PM hours (12:00 PM to 9:59 PM) - Light orange background */
+        .fc-timegrid-slot[data-time="12:00:00"],
+        .fc-timegrid-slot[data-time="12:30:00"],
+        .fc-timegrid-slot[data-time="13:00:00"],
+        .fc-timegrid-slot[data-time="13:30:00"],
+        .fc-timegrid-slot[data-time="14:00:00"],
+        .fc-timegrid-slot[data-time="14:30:00"],
+        .fc-timegrid-slot[data-time="15:00:00"],
+        .fc-timegrid-slot[data-time="15:30:00"],
+        .fc-timegrid-slot[data-time="16:00:00"],
+        .fc-timegrid-slot[data-time="16:30:00"],
+        .fc-timegrid-slot[data-time="17:00:00"],
+        .fc-timegrid-slot[data-time="17:30:00"],
+        .fc-timegrid-slot[data-time="18:00:00"],
+        .fc-timegrid-slot[data-time="18:30:00"],
+        .fc-timegrid-slot[data-time="19:00:00"],
+        .fc-timegrid-slot[data-time="19:30:00"],
+        .fc-timegrid-slot[data-time="20:00:00"],
+        .fc-timegrid-slot[data-time="20:30:00"],
+        .fc-timegrid-slot[data-time="21:00:00"],
+        .fc-timegrid-slot[data-time="21:30:00"] {
+          background-color: rgba(255, 228, 196, 0.15) !important; /* Light orange for PM */
+        }
+
+        /* Alternative approach using pseudo-elements for smoother gradients */
+        .fc-timegrid-body::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 50%;
+          background: linear-gradient(180deg, rgba(173, 216, 230, 0.1) 0%, rgba(173, 216, 230, 0.05) 100%);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .fc-timegrid-body::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(180deg, rgba(255, 228, 196, 0.05) 0%, rgba(255, 228, 196, 0.1) 100%);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        /* Ensure events remain above background */
+        .fc-timegrid-event {
+          z-index: 3 !important;
+        }
+
+        .fc-timegrid-col-frame {
+          position: relative;
+          z-index: 2;
+        }
+
+        /* Month view "Read More" button styling */
+        .read-more-btn {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          margin: 2px;
+        }
+
+        .read-more-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+          background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+
+        .read-more-btn:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Month view more link container */
+        .fc-daygrid-more-link {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 2px;
+        }
+
+        /* Hide default more link styling in month view */
+        .fc-daygrid-view .fc-more-link {
+          text-decoration: none;
+          color: inherit;
+        }
       `}</style>
 
       <FullCalendar
@@ -458,7 +591,7 @@ export default function Calendar() {
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "dayGridMonth,timeGridWeek,multiMonthYear",
+          right: "timeGridDay,dayGridMonth,timeGridWeek,multiMonthYear",
         }}
         // customButtons={{
         //   dotToggle: {
@@ -467,6 +600,22 @@ export default function Calendar() {
         //   },
         // }}
         views={{
+          timeGridDay: {
+            type: "timeGrid",
+            duration: { days: 1 },
+            buttonText: "Day",
+            slotMinTime: "06:00:00",
+            slotMaxTime: "22:00:00",
+            allDaySlot: true,
+            slotDuration: "00:30:00", // 30-minute time slots
+            scrollTime: "08:00:00", // Scroll to 8 AM by default
+          },
+          dayGridMonth: {
+            type: "dayGrid",
+            duration: { months: 1 },
+            buttonText: "Month",
+            dayMaxEvents: 7, // Show max 7 events then "read more"
+          },
           multiMonthYear: {
             type: "multiMonth",
             duration: { years: 1 },
@@ -492,6 +641,35 @@ export default function Calendar() {
         }}
         height="auto"
         navLinks={true}
+        // Custom "read more" link content
+        moreLinkContent={(arg) => {
+          if (currentView === "dayGridMonth") {
+            return {
+              html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`
+            };
+          } else if (currentView === "multiMonthYear" && isDotView) {
+            const eventCount = arg.num;
+            // const dotColor = '#3788d8';
+            
+            if (eventCount === 1) {
+              return {
+                html: `<span class="custom-more-events">
+                        
+                        <span class="custom-more-text">+ ${eventCount}  </span>
+                       </span>`
+              };
+            } else {
+              return {
+                html: `<span class="custom-more-events">
+                        
+                        <span class="custom-more-text">+ ${eventCount}  </span>
+                       </span>`
+              };
+            }
+          }
+          return `+ ${arg.num} more`;
+        }}
+        // moreLinkClick={handleMoreLinkClick}
         // Custom event count display for year view
         viewDidMount={(info) => {
           setCurrentView(
@@ -522,7 +700,10 @@ export default function Calendar() {
           handleDateClick(weekStart);
         }}
         eventClick={(info) => {
-          handleEventClick(info);
+          
+
+          // link to new page
+          window.open(info.event.url, "_blank");
         }}
         datesSet={updateMonthTitles} // runs on view change
         eventAdd={updateMonthTitles} // runs when new event is added
@@ -530,7 +711,7 @@ export default function Calendar() {
         eventRemove={updateMonthTitles} // runs when event removed
       />
       {/*  modal  */}
-      <Modal
+      {/* <Modal
         title={
           <Space>
             <CalendarOutlined />
@@ -592,7 +773,44 @@ export default function Calendar() {
             )}
           </Space>
         )}
-      </Modal>
+      </Modal> */}
+
+      {/* Read More Modal for Month View */}
+      {/* <Modal
+        title={`Events for ${readMoreDate}`}
+        open={readMoreModalVisible}
+        onCancel={() => setReadMoreModalVisible(false)}
+        footer={null}
+        width={600}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          {readMoreEvents.map((event, index) => (
+            <div key={index} style={{ 
+              padding: '8px 12px', 
+              border: '1px solid #d9d9d9', 
+              borderRadius: '6px',
+              backgroundColor: event.backgroundColor || '#1890ff'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                color: 'white'
+              }}>
+                <div>
+                  <div style={{ fontWeight: 'bold' }}>{event.title}</div>
+                  {event.start && (
+                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                      <ClockCircleOutlined /> {event.start.toLocaleTimeString()}
+                    </div>
+                  )}
+                </div>
+                <CalendarOutlined />
+              </div>
+            </div>
+          ))}
+        </Space>
+      </Modal> */}
     </div>
   );
 }
