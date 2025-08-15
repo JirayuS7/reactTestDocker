@@ -2,13 +2,10 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
+// import interactionPlugin from "@fullcalendar/interaction";
 import { useRef, useState } from "react";
-import {  Tooltip } from "antd";
+import { Popover, Tooltip } from "antd";
 import dayjs from "dayjs";
-
- 
-
- 
 const events = [
   {
     id: "1",
@@ -61,18 +58,55 @@ const events = [
   },
   {
     id: "extra7",
+    title: "Sprint Planning 2",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra8",
+    title: "Sprint Planning 8",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra9",
+    title: "Sprint Planning 9",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra10",
+    title: "Sprint Planning 10",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra11",
+    title: "Sprint Planning 11",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra12",
+    title: "Sprint Planning 12",
+    start: new Date(), // Today
+    color: "#38b2ac",
+  },
+  {
+    id: "extra7",
     title: "Client Demo",
     start: dayjs("2025-08-15 08:00").toDate(),
-    end : dayjs("2025-08-15 09:00").toDate(),
+    end: dayjs("2025-08-15 09:00").toDate(),
     color: "#d69e2e",
   },
   {
     id: "extra8",
     title: "Bug Triage",
     start: dayjs("2025-08-15 09:00").toDate(),
-    end : dayjs("2025-08-15 10:00").toDate(),
+    end: dayjs("2025-08-15 10:00").toDate(),
     color: "#e53e3e",
   },
+
   {
     id: "3",
     title: "Code Review",
@@ -109,14 +143,14 @@ const events = [
     end: dayjs("2025-08-11 13:00").toDate(),
     color: "#FFA500",
   },
-    {
+  {
     id: "7",
     title: "Meeting 3",
     start: dayjs("2025-08-11 13:00").toDate(),
     end: dayjs("2025-08-11 14:00").toDate(),
     color: "#FFA500",
   },
-   {
+  {
     id: "8",
     title: "Meeting 4",
     start: dayjs("2025-08-11 16:00").toDate(),
@@ -131,22 +165,21 @@ const events = [
     color: "#FFA500",
   },
 
-
-    {
+  {
     id: "10",
     title: "Meeting 1",
     start: dayjs("2025-08-11 8:30").toDate(),
     end: dayjs("2025-08-11 9:00").toDate(),
     color: "blue",
   },
-    {
+  {
     id: "11",
     title: "Meeting 2",
     start: dayjs("2025-08-11 9.00").toDate(),
     end: dayjs("2025-08-11 11:00").toDate(),
     color: "blue",
   },
-    {
+  {
     id: "12",
     title: "Meeting 3",
     start: dayjs("2025-08-11 11.00").toDate(),
@@ -157,9 +190,62 @@ const events = [
 
 export default function Calendar() {
   const calendarRef = useRef<FullCalendar>(null);
- 
+
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
+
+  // day veiw
+
+  // const eventContent = (arg:{
+  //   event: {
+  //     id: string;
+  //     title: string;
+  //     start: Date;
+  //     end: Date;
+  //   };
+  // }) => {
+  //   const startTime = dayjs(arg.event.start).format("HH:mm");
+
+  //   // Get all events that start at this exact time
+  //   const sameTimeEvents = events.filter(
+  //     (ev) => dayjs(ev.start).format("HH:mm") === startTime
+  //   );
+
+  //   const index = sameTimeEvents.findIndex((e) => e.id === arg.event.id);
+
+  //   // Only render first MAX_VISIBLE events
+  //   if (index >= MAX_VISIBLE) {
+  //     return null;
+  //   }
+
+  //   // If this is the last visible event and there are more hidden
+  //   if (index === MAX_VISIBLE - 1 && sameTimeEvents.length > MAX_VISIBLE) {
+  //     const extraCount = sameTimeEvents.length - MAX_VISIBLE;
+  //     return (
+  //       <div>
+  //         <div>{arg.event.title}</div>
+  //         <Popover
+  //           content={
+  //             <div>
+  //               {sameTimeEvents.slice(MAX_VISIBLE).map((ev) => (
+  //                 <div key={ev.id}>{ev.title}</div>
+  //               ))}
+  //             </div>
+  //           }
+  //           title="More Events"
+  //           trigger="click"
+  //         >
+  //           <a style={{ fontSize: "12px", color: "blue", cursor: "pointer" }}>
+  //             +{extraCount} more
+  //           </a>
+  //         </Popover>
+  //       </div>
+  //     );
+  //   }
+
+  //   // Normal event rendering
+  //   return <div>{arg.event.title}</div>;
+  // };
 
   const updateMonthTitles = () => {
     const calendarApi = calendarRef.current && calendarRef.current.getApi();
@@ -230,11 +316,7 @@ export default function Calendar() {
     }
   };
 
- 
-
- 
   // Function to get the color of events for a specific date
- 
 
   // Function to customize more links after calendar render
   const customizeMoreLinks = () => {
@@ -283,64 +365,6 @@ export default function Calendar() {
       });
     }, 200);
   };
-
-  // const updateMonthTitlesWithEventCounts = () => {
-  //   const calendarApi = calendarRef.current?.getApi();
-  //   if (!calendarApi) return;
-
-  //   // Get all events
-  //   const allEvents = calendarApi.getEvents();
-
-  //   // Find all month title elements in the year view
-  //   const monthTitles = document.querySelectorAll(".fc-multimonth-title");
-
-  //   monthTitles.forEach((titleElement) => {
-  //     const titleText = titleElement.textContent || "";
-
-  //     // Extract month name (remove any existing count)
-  //     const monthName = titleText.replace(/\s*\(\d+\)$/, "");
-
-  //     // Get the month element to find its date range
-  //     const monthElement = titleElement.closest(".fc-multimonth-month");
-  //     if (!monthElement) return;
-
-  //     // Get the month's date range
-  //     const monthDateStr = monthElement.getAttribute("data-date");
-  //     if (!monthDateStr) return;
-
-  //     const monthDate = new Date(monthDateStr + "T00:00:00");
-  //     const monthStart = new Date(
-  //       monthDate.getFullYear(),
-  //       monthDate.getMonth(),
-  //       1
-  //     );
-  //     const monthEnd = new Date(
-  //       monthDate.getFullYear(),
-  //       monthDate.getMonth() + 1,
-  //       0,
-  //       23,
-  //       59,
-  //       59
-  //     );
-
-  //     // Count events in this month
-  //     const eventsInMonth = allEvents.filter((event) => {
-  //       const eventStart = event.start;
-  //       const eventEnd = event.end || event.start;
-
-  //       if (!eventStart || !eventEnd) return false;
-
-  //       // Check if event overlaps with this month
-  //       return eventStart <= monthEnd && eventEnd >= monthStart;
-  //     });
-
-  //     // Update title with count
-  //     const eventCount = eventsInMonth.length;
-  //     titleElement.textContent = `${monthName} (${eventCount})`;
-  //   });
-  // };
-
-  // Sample events including today
 
   return (
     <div>
@@ -590,7 +614,7 @@ export default function Calendar() {
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "timeGridDay,dayGridMonth,timeGridWeek,multiMonthYear",
+          right: "timeGridDay,timeGridWeek,dayGridMonth,multiMonthYear",
         }}
         // customButtons={{
         //   dotToggle: {
@@ -601,13 +625,23 @@ export default function Calendar() {
         views={{
           timeGridDay: {
             type: "timeGrid",
-            duration: { days: 1 },
+            eventMaxStack: 7,
             buttonText: "Day",
             slotMinTime: "06:00:00",
             slotMaxTime: "22:00:00",
-            allDaySlot: true,
+            // allDaySlot: true,
             slotDuration: "00:30:00", // 30-minute time slots
             scrollTime: "08:00:00", // Scroll to 8 AM by default
+           
+            contentHeight: 'auto',
+            expandRows: true,
+            slotEventOverlap: true,
+            buttonIcons: {
+              prev: "chevron-left",
+              next: "chevron-right",
+              today: "today",
+            },
+            // dayMaxEventRows: 7,
           },
           dayGridMonth: {
             type: "dayGrid",
@@ -636,6 +670,8 @@ export default function Calendar() {
             slotMinTime: "06:00:00",
             slotMaxTime: "22:00:00",
             allDaySlot: true,
+            dayMaxEventRows: 7,
+                eventMaxStack: 7,
           },
         }}
         height="auto"
@@ -644,27 +680,35 @@ export default function Calendar() {
         moreLinkContent={(arg) => {
           if (currentView === "dayGridMonth") {
             return {
-              html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`
+              html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`,
             };
           } else if (currentView === "multiMonthYear" && isDotView) {
             const eventCount = arg.num;
             // const dotColor = '#3788d8';
-            
+
             if (eventCount === 1) {
               return {
                 html: `<span class="custom-more-events">
                         
                         <span class="custom-more-text">+ ${eventCount}  </span>
-                       </span>`
+                       </span>`,
               };
             } else {
               return {
                 html: `<span class="custom-more-events">
                         
                         <span class="custom-more-text">+ ${eventCount}  </span>
-                       </span>`
+                       </span>`,
               };
             }
+          } else if (currentView === "timeGridDay") {
+            const eventCount = arg.num;
+
+            if (eventCount === 1) {
+              return `<span class="custom-more-events">
+                    <span class="custom-more-text">+ ${eventCount} </span>
+                  </span>`;
+            } 
           }
           return `+ ${arg.num} more`;
         }}
@@ -690,6 +734,13 @@ export default function Calendar() {
             }
           }, 100);
         }}
+        // eventContent={(value) => {
+        //   if (currentView === "timeGridDay") {
+        //     return eventContent;
+        //   }
+
+        // }}
+
         navLinkDayClick={(date) => {
           // When clicking on a day number, go to month view of that day
           handleDateClick(date);
@@ -699,8 +750,6 @@ export default function Calendar() {
           handleDateClick(weekStart);
         }}
         eventClick={(info) => {
-          
-
           // link to new page
           window.open(info.event.url, "_blank");
         }}
