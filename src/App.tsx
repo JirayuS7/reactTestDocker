@@ -1,18 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect    } from "react";
 import "./App.css";
 import Calendar from "./Celendar";
 import ApiTest from "./ApiTest";
 import { Tabs, Alert, Space } from "antd";
 import { apiClient, getEnvironmentInfo } from "./utils/api";
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+ 
 
 function App() {
-  const [users, setUsers] = useState<User[]>([]);
   const envInfo = getEnvironmentInfo();
 
   useEffect(() => {
@@ -20,7 +15,6 @@ function App() {
       try {
         // Use the new API client that works in both dev and production
         const data = await apiClient.get("/users");
-        setUsers(data);
         console.log("Users fetched:", data);
       } catch (error) {
         console.error("Failed to fetch users:", error);
@@ -67,22 +61,7 @@ function App() {
             label: "API Test",
             children: <ApiTest />,
           },
-          {
-            key: "3",
-            label: "User List",
-            children: (
-              <>
-                <h1>User List</h1>
-                <ul>
-                  {users.map((user) => (
-                    <li key={user.id}>
-                      {user.name} | {user.email}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ),
-          },
+          
           {
             key: "4",
             label: "Calendar",
