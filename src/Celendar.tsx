@@ -4,7 +4,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useRef, useState } from "react";
-import { Popover, Tooltip } from "antd";
+import {   Tooltip } from "antd";
 import dayjs from "dayjs";
 const events = [
   {
@@ -263,7 +263,7 @@ export default function Calendar() {
 
     // Update the month header labels
     document.querySelectorAll(".fc-multimonth-title").forEach((titleEl) => {
-      const match = titleEl.textContent.match(/^([A-Za-z]+)\s?(\d{4})?$/);
+      const match =  titleEl.textContent && titleEl.textContent.match(/^([A-Za-z]+)\s?(\d{4})?$/);
 
       if (match) {
         const monthName = match[1];
