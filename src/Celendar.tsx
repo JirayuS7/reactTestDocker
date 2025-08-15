@@ -2,7 +2,6 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
-import type { EventApi, EventClickArg, MoreLinkArg } from "@fullcalendar/core";
 import { useRef, useState } from "react";
 import {  Tooltip } from "antd";
 import dayjs from "dayjs";
