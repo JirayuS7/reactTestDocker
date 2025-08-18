@@ -367,10 +367,10 @@ export default function Calendar() {
   };
 
   return (
-    <div>
+    <div className="calendar-container">
       {/* Toggle button for year view */}
       {currentView === "multiMonthYear" && (
-        <div style={{ marginBottom: 16, textAlign: "right" }}>
+        <div style={{ marginBottom: 16, textAlign: "right", flexShrink: 0 }}>
           <Tooltip
             title={
               isDotView
@@ -380,6 +380,165 @@ export default function Calendar() {
           ></Tooltip>
         </div>
       )}
+
+      <div className="calendar-wrapper">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, multiMonthPlugin, timeGridPlugin]}
+          initialView="dayGridMonth"
+          events={events}
+          height="100vh" // Set explicit height
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "timeGridDay,timeGridWeek,dayGridMonth,multiMonthYear",
+          }}
+          // customButtons={{
+          //   dotToggle: {
+          //     text: isDotView ? "Show Titles" : "Show Dots",
+          //     click: () => setIsDotView(!isDotView),
+          //   },
+          // }}
+          views={{
+            timeGridDay: {
+              type: "timeGrid",
+              eventMaxStack: 7,
+              buttonText: "Day",
+              slotMinTime: "06:00:00",
+              slotMaxTime: "22:00:00",
+              // allDaySlot: true,
+              slotDuration: "00:30:00", // 30-minute time slots
+              scrollTime: "08:00:00", // Scroll to 8 AM by default
+             
+              contentHeight: 'auto',
+              expandRows: true,
+              slotEventOverlap: true,
+              buttonIcons: {
+                prev: "chevron-left",
+                next: "chevron-right",
+                today: "today",
+              },
+              // dayMaxEventRows: 7,
+            },
+            dayGridMonth: {
+              type: "dayGrid",
+              duration: { months: 1 },
+              buttonText: "Month",
+              dayMaxEvents: 7, // Show max 7 events then "read more"
+            },
+            multiMonthYear: {
+              type: "multiMonth",
+              duration: { years: 1 },
+              buttonText: "Year",
+
+              // dayCount: 365,
+              multiMonthTitleFormat: {
+                month: "long",
+              },
+
+              // Display events as dots in year view based on toggle
+              eventDisplay: isDotView ? "dot" : "block",
+              dayMaxEvents: isDotView ? 1 : 2, // Show max 1 dot then "+more" for better control
+              // Add these for better year view control
+              contentHeight: "auto",
+              aspectRatio: 1.35, // Adjust this to control month layout
+            },
+            timeGridWeek: {
+              type: "timeGrid",
+              duration: { weeks: 1 },
+              buttonText: "Week",
+              slotMinTime: "06:00:00",
+              slotMaxTime: "22:00:00",
+              allDaySlot: true,
+              dayMaxEventRows: 7,
+                  eventMaxStack: 7,
+            },
+          }}
+        
+          navLinks={true}
+          // Custom "read more" link content
+          moreLinkContent={(arg) => {
+            if (currentView === "dayGridMonth") {
+              return {
+                html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`,
+              };
+            } else if (currentView === "multiMonthYear" && isDotView) {
+              const eventCount = arg.num;
+              // const dotColor = '#3788d8';
+
+              if (eventCount === 1) {
+                return {
+                  html: `<span class="custom-more-events">
+                          
+                          <span class="custom-more-text">+ ${eventCount}  </span>
+                         </span>`,
+                };
+              } else {
+                return {
+                  html: `<span class="custom-more-events">
+                          
+                          <span class="custom-more-text">+ ${eventCount}  </span>
+                         </span>`,
+                };
+              }
+            } else if (currentView === "timeGridDay") {
+              const eventCount = arg.num;
+
+              if (eventCount === 1) {
+                return `<span class="custom-more-events">
+                      <span class="custom-more-text">+ ${eventCount} </span>
+                    </span>`;
+              } 
+            }
+            return `+ ${arg.num} more`;
+          }}
+          // moreLinkClick={handleMoreLinkClick}
+          // Custom event count display for year view
+          viewDidMount={(info) => {
+            setCurrentView(
+              info.view.type === "multiMonth" ? "multiMonthYear" : info.view.type
+            );
+            if (info.view.type === "multiMonth") {
+              setTimeout(() => {
+                // updateMonthTitlesWithEventCounts();
+                customizeMoreLinks();
+              }, 100);
+            }
+          }}
+          eventsSet={() => {
+            // Update counts when events change
+            setTimeout(() => {
+              if (calendarRef.current?.getApi().view.type === "multiMonth") {
+                // updateMonthTitlesWithEventCounts();
+                customizeMoreLinks();
+              }
+            }, 100);
+          }}
+          // eventContent={(value) => {
+          //   if (currentView === "timeGridDay") {
+          //     return eventContent;
+          //   }
+
+          // }}
+
+          navLinkDayClick={(date) => {
+            // When clicking on a day number, go to month view of that day
+            handleDateClick(date);
+          }}
+          navLinkWeekClick={(weekStart) => {
+            // When clicking on a week number, go to month view of that week
+            handleDateClick(weekStart);
+          }}
+          eventClick={(info) => {
+            // link to new page
+            window.open(info.event.url, "_blank");
+          }}
+          datesSet={updateMonthTitles} // runs on view change
+          eventAdd={updateMonthTitles} // runs when new event is added
+          eventChange={updateMonthTitles} // runs when event changes
+          eventRemove={updateMonthTitles} // runs when event removed
+        />
+      </div>
 
       {/* Custom styles for year view dots */}
       <style>{`
@@ -480,6 +639,55 @@ export default function Calendar() {
         .fc-multimonth .fc-more-link:hover {
           color: #1890ff;
           text-decoration: none;
+        }
+
+        /* Year view scrollbar styling */
+        .fc-multimonth {
+          max-height: 100vh !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+        }
+
+        /* Custom scrollbar styling for year view */
+        .fc-multimonth::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .fc-multimonth::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+
+        .fc-multimonth::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 4px;
+          transition: background 0.2s ease;
+        }
+
+        .fc-multimonth::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+
+        /* Firefox scrollbar styling */
+        .fc-multimonth {
+          scrollbar-width: thin;
+          scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+
+        /* Ensure smooth scrolling */
+        .fc-multimonth {
+          scroll-behavior: smooth;
+        }
+
+        /* Optional: Add padding for better scrollbar visibility */
+        .fc-multimonth .fc-multimonth-body {
+          padding-right: 4px;
+        }
+
+        /* Prevent horizontal overflow */
+        .fc-multimonth .fc-multimonth-month {
+          min-width: 0;
+          flex-shrink: 1;
         }
 
         /* Week view AM/PM background styling */
@@ -604,160 +812,42 @@ export default function Calendar() {
           text-decoration: none;
           color: inherit;
         }
+
+        /* Add this additional CSS for more granular control */
+        /* Container wrapper for better height control */
+        .calendar-container {
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .calendar-wrapper {
+          flex: 1;
+          overflow: hidden;
+        }
+
+        /* Year view specific scrolling */
+        .fc-multimonth-view {
+          height: calc(100vh - 220px) !important; /* Subtract header height */
+          overflow-y: auto !important;
+        }
+
+        /* Alternative: Container-based approach */
+        .year-view-container {
+          max-height: calc(100vh - 220px); /* Account for header/padding */
+          overflow-y: auto;
+          padding: 10px;
+        }
+
+        /* Smooth scroll behavior */
+        .fc-multimonth,
+        .fc-multimonth-view,
+        .year-view-container {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+        }
       `}</style>
 
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, multiMonthPlugin, timeGridPlugin]}
-        initialView="dayGridMonth"
-        events={events}
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "timeGridDay,timeGridWeek,dayGridMonth,multiMonthYear",
-        }}
-        // customButtons={{
-        //   dotToggle: {
-        //     text: isDotView ? "Show Titles" : "Show Dots",
-        //     click: () => setIsDotView(!isDotView),
-        //   },
-        // }}
-        views={{
-          timeGridDay: {
-            type: "timeGrid",
-            eventMaxStack: 7,
-            buttonText: "Day",
-            slotMinTime: "06:00:00",
-            slotMaxTime: "22:00:00",
-            // allDaySlot: true,
-            slotDuration: "00:30:00", // 30-minute time slots
-            scrollTime: "08:00:00", // Scroll to 8 AM by default
-           
-            contentHeight: 'auto',
-            expandRows: true,
-            slotEventOverlap: true,
-            buttonIcons: {
-              prev: "chevron-left",
-              next: "chevron-right",
-              today: "today",
-            },
-            // dayMaxEventRows: 7,
-          },
-          dayGridMonth: {
-            type: "dayGrid",
-            duration: { months: 1 },
-            buttonText: "Month",
-            dayMaxEvents: 7, // Show max 7 events then "read more"
-          },
-          multiMonthYear: {
-            type: "multiMonth",
-            duration: { years: 1 },
-            buttonText: "Year",
-
-            // dayCount: 365,
-            multiMonthTitleFormat: {
-              month: "long",
-            },
-
-            // Display events as dots in year view based on toggle
-            eventDisplay: isDotView ? "dot" : "block",
-            dayMaxEvents: isDotView ? 1 : 2, // Show max 1 dot then "+more" for better control
-          },
-          timeGridWeek: {
-            type: "timeGrid",
-            duration: { weeks: 1 },
-            buttonText: "Week",
-            slotMinTime: "06:00:00",
-            slotMaxTime: "22:00:00",
-            allDaySlot: true,
-            dayMaxEventRows: 7,
-                eventMaxStack: 7,
-          },
-        }}
-        height="auto"
-        navLinks={true}
-        // Custom "read more" link content
-        moreLinkContent={(arg) => {
-          if (currentView === "dayGridMonth") {
-            return {
-              html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`,
-            };
-          } else if (currentView === "multiMonthYear" && isDotView) {
-            const eventCount = arg.num;
-            // const dotColor = '#3788d8';
-
-            if (eventCount === 1) {
-              return {
-                html: `<span class="custom-more-events">
-                        
-                        <span class="custom-more-text">+ ${eventCount}  </span>
-                       </span>`,
-              };
-            } else {
-              return {
-                html: `<span class="custom-more-events">
-                        
-                        <span class="custom-more-text">+ ${eventCount}  </span>
-                       </span>`,
-              };
-            }
-          } else if (currentView === "timeGridDay") {
-            const eventCount = arg.num;
-
-            if (eventCount === 1) {
-              return `<span class="custom-more-events">
-                    <span class="custom-more-text">+ ${eventCount} </span>
-                  </span>`;
-            } 
-          }
-          return `+ ${arg.num} more`;
-        }}
-        // moreLinkClick={handleMoreLinkClick}
-        // Custom event count display for year view
-        viewDidMount={(info) => {
-          setCurrentView(
-            info.view.type === "multiMonth" ? "multiMonthYear" : info.view.type
-          );
-          if (info.view.type === "multiMonth") {
-            setTimeout(() => {
-              // updateMonthTitlesWithEventCounts();
-              customizeMoreLinks();
-            }, 100);
-          }
-        }}
-        eventsSet={() => {
-          // Update counts when events change
-          setTimeout(() => {
-            if (calendarRef.current?.getApi().view.type === "multiMonth") {
-              // updateMonthTitlesWithEventCounts();
-              customizeMoreLinks();
-            }
-          }, 100);
-        }}
-        // eventContent={(value) => {
-        //   if (currentView === "timeGridDay") {
-        //     return eventContent;
-        //   }
-
-        // }}
-
-        navLinkDayClick={(date) => {
-          // When clicking on a day number, go to month view of that day
-          handleDateClick(date);
-        }}
-        navLinkWeekClick={(weekStart) => {
-          // When clicking on a week number, go to month view of that week
-          handleDateClick(weekStart);
-        }}
-        eventClick={(info) => {
-          // link to new page
-          window.open(info.event.url, "_blank");
-        }}
-        datesSet={updateMonthTitles} // runs on view change
-        eventAdd={updateMonthTitles} // runs when new event is added
-        eventChange={updateMonthTitles} // runs when event changes
-        eventRemove={updateMonthTitles} // runs when event removed
-      />
       {/*  modal  */}
       {/* <Modal
         title={
