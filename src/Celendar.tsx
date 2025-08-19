@@ -4,7 +4,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useRef, useState } from "react";
-import { Button, Col, Form,   Modal,   Row, Space, Tooltip } from "antd";
+import { Button, Col, Form, Modal, Row, Space, Tooltip } from "antd";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import UserLists from "./UserLists";
@@ -199,7 +199,6 @@ export default function Calendar() {
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
   const [eventsList, setEventsList] = useState(events);
-  console.log("🚀 ~ Calendar ~ eventsList:", eventsList?.length);
   const [externalEvents, setExternalEvents] = useState([
     {
       key: "event1",
@@ -282,13 +281,14 @@ export default function Calendar() {
     const monthEventCounts: { [key: string]: number } = {};
     allEvents.forEach((evt) => {
       const date = evt.start;
-      const key = `${date && date.getFullYear()}-${
-        date && date.getMonth() + 1
-      }`;
+      if (!date) return;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const key = `${year}-${month}`;
       monthEventCounts[key] = (monthEventCounts[key] || 0) + 1;
     });
 
-    // Update the month header labels
+    // Update the month header labels in Year view
     document.querySelectorAll(".fc-multimonth-title").forEach((titleEl) => {
       const match =
         titleEl.textContent &&
@@ -300,16 +300,13 @@ export default function Calendar() {
         const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
         const key = `${year}-${monthIndex}`;
         const count = monthEventCounts[key] || 0;
-
-        // remove old data
-
-        titleEl.innerHTML = `<span> <span class="event-count">(${count})</span></span>`;
+        // Show as "MonthName (count)"
+        titleEl.innerHTML = `  <span class="event-count"> (${count})</span> `;
       }
     });
 
-    //  make  <a></a> link wrapper  .fc-multimonth-title
-
-    //  change tag div.fc-multimonth-title to be <a></a>
+    // make link to month view
+        //  change tag div.fc-multimonth-title to be <a></a>
     document.querySelectorAll(".fc-multimonth-title").forEach((titleEl) => {
       // Skip if already has a link
       if (titleEl.querySelector("a")) return;
@@ -336,6 +333,7 @@ export default function Calendar() {
       titleEl.innerHTML = "";
       titleEl.appendChild(link);
     });
+
   };
 
   const handleDateClick = (date: Date) => {
@@ -419,12 +417,12 @@ export default function Calendar() {
 
   const ModalConfirm = (
     <Modal
-      title="Select Event Duration  "
+      title={`Select Event Duration  at ${dayjs(droppedEventInfo?.dateStr).format("YYYY-MM-DD") || "-"}`}
       closable={{ "aria-label": "Custom Close Button" }}
       open={isModalOpen}
       footer={null}
       centered
-       onCancel={handleCancel}
+      onCancel={handleCancel}
     >
       <Form
         layout={formLayout}
@@ -433,25 +431,74 @@ export default function Calendar() {
         onValuesChange={onFormLayoutChange}
         style={{ maxWidth: formLayout === "inline" ? "none" : 600 }}
       >
-        <Form.Item   name="layout">
+        <Form.Item name="layout">
           <Space direction="vertical" style={{ width: "100%" }}>
-          <Button color="cyan" variant="solid" onClick={() => handleTimeSelection(6, 12)
-
-            
-
-          }>
-             Morning Time : 06:00 - 12:00
-          </Button>
-            <Button color="primary" variant="solid" onClick={() => handleTimeSelection(12, 18)}>
-            Afternoon Time : 12:00 - 18:00
-          </Button>
+            <Button
+              color="cyan"
+              variant="solid"
+              onClick={() => handleTimeSelection(6, 12)}
+            >
+              Morning Time : 06:00 - 12:00
+            </Button>
+            <Button
+              color="primary"
+              variant="solid"
+              onClick={() => handleTimeSelection(12, 18)}
+            >
+              Afternoon Time : 12:00 - 18:00
+            </Button>
           </Space>
         </Form.Item>
-
-        
       </Form>
     </Modal>
   );
+
+  //  tool tip
+
+  // Copy from FullCalendar source for default inner structure
+  // function renderInnerContent(innerProps: any) {
+  //   const limitText = 20;
+  //   const eventTitle = innerProps.event.title || "\u00A0";
+  //   const displayedTitle =
+  //     eventTitle.length > limitText
+  //       ? eventTitle.slice(0, limitText) + "..."
+  //       : eventTitle;
+
+  //   if (currentView === "dayGridMonth") {
+  //     // Custom rendering for multiMonthYear view
+
+  //     return (
+  //       <div className="fc-event-main-frame">
+  //         {innerProps.timeText && (
+  //           <div className="fc-event-time">
+  //             {" "}
+  //             <span
+  //               style={{
+  //                 width: "8px",
+  //                 height: "8px",
+  //                 display: "inline-block",
+  //                 backgroundColor: innerProps.event.backgroundColor,
+  //               }}
+  //             >
+  //               {" "}
+  //             </span>{" "}
+  //             {innerProps.timeText} : {displayedTitle}
+  //           </div>
+  //         )}
+  //         {/* <div className="fc-event-title-container">
+  //           <div className="fc-event-title fc-sticky">{displayedTitle}</div>
+  //         </div> */}
+  //       </div>
+  //     );
+  //   }
+  // }
+  // const renderEventWithTooltip = (arg: any) => {
+  //   return (
+  //     <Tooltip title={arg.event.title} placement="top" arrow>
+  //       {renderInnerContent(arg)}
+  //     </Tooltip>
+  //   );
+  // };
 
   return (
     <div>
@@ -503,6 +550,8 @@ export default function Calendar() {
                 //     click: () => setIsDotView(!isDotView),
                 //   },
                 // }}
+
+                // eventContent={renderEventWithTooltip} // Apply custom rendering
                 views={{
                   timeGridDay: {
                     type: "timeGrid",
@@ -605,26 +654,21 @@ export default function Calendar() {
                   );
                   if (info.view.type === "multiMonth") {
                     setTimeout(() => {
-                      // updateMonthTitlesWithEventCounts();
+                      updateMonthTitles();
                       customizeMoreLinks();
                     }, 100);
                   }
                 }}
                 eventsSet={() => {
-                  // Update counts when events change
                   setTimeout(() => {
                     if (
                       calendarRef.current?.getApi().view.type === "multiMonth"
                     ) {
-                      // updateMonthTitlesWithEventCounts();
+                      updateMonthTitles();
                       customizeMoreLinks();
                     }
                   }, 100);
                 }}
-                // eventContent={(e) => (currentView == "dayGridMonth" ? eventContent :
-                //   <span className="custom-event-dot" style={{ backgroundColor: e.event.backgroundColor || e.event.color || "#3788d8" }}></span>
-
-                //  )}
                 navLinkDayClick={(date) => {
                   // When clicking on a day number, go to month view of that day
                   handleDateClick(date);
