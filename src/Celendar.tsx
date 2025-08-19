@@ -14,14 +14,14 @@ type LayoutType = Parameters<typeof Form>[0]["layout"];
 const events = [
   {
     id: "1",
-    title: "Team Meeting xxxxxx wwwwwwww sdsss",
+    title: "Team Meeting Now when you're in the Year view and click on any month name  ",
     start: new Date(), // Today
     end: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
     color: "#FFA500",
   },
   {
     id: "2b",
-    title: "Client Call",
+    title: "Client Call  it will navigate to that month's detailed view. The navigation uses your existing",
     start: new Date(), // Today - another event same day
     color: "#FFA500",
   },
@@ -274,6 +274,12 @@ export default function Calendar() {
   };
 
   const updateMonthTitles = () => {
+    setTimeout(() => {
+      updateToolTip();
+    }, 500);
+
+    if (currentView !== "multiMonth") return;
+
     const calendarApi = calendarRef.current && calendarRef.current.getApi();
     const allEvents = calendarApi ? calendarApi.getEvents() : [];
 
@@ -337,17 +343,15 @@ export default function Calendar() {
 
   const updateToolTip = () => {
     // change tool tip
-    document.querySelectorAll(".fc-event-title").forEach((titleEl) => {
-      const limitText = 10;
-      //  find text in titleEl
+    document.querySelectorAll(".day-event-title").forEach((titleEl) => {
       const eventText = titleEl.textContent || "";
+     
+ 
+        titleEl.setAttribute("title", eventText); // Truncate text with ellipsis
 
-      if (eventText.length > limitText) {
-        titleEl.innerHTML = `<span style="float:right"> ...</span>`;
 
 
-        titleEl.setAttribute("title", eventText); // Set full text as tooltip
-      }
+   
     });
   };
 
@@ -576,7 +580,7 @@ export default function Calendar() {
                     // allDaySlot: true,
                     slotDuration: "00:30:00", // 30-minute time slots
                     scrollTime: "08:00:00", // Scroll to 8 AM by default
-
+                    eventClassNames: "day-event-title",
                     contentHeight: "auto",
                     expandRows: true,
                     slotEventOverlap: true,
@@ -591,13 +595,14 @@ export default function Calendar() {
                     type: "dayGrid",
                     duration: { months: 1 },
                     buttonText: "Month",
-                    dayMaxEvents: 7, // Show max 7 events then "read more"
+                    dayMaxEvents: 5, // Show max 5 events then "read more"
+                    eventClassNames: "day-event-title",
                   },
                   multiMonthYear: {
                     type: "multiMonth",
                     duration: { years: 1 },
                     buttonText: "Year",
-
+                    eventClassNames: "day-event-title",
                     // dayCount: 365,
                     multiMonthTitleFormat: {
                       month: "long",
@@ -619,6 +624,7 @@ export default function Calendar() {
                     allDaySlot: true,
                     dayMaxEventRows: 7,
                     eventMaxStack: 7,
+                    eventClassNames: "day-event-title",
                   },
                 }}
                 navLinks={true}
@@ -673,7 +679,7 @@ export default function Calendar() {
                     }, 100);
                   }
 
-                  updateToolTip();
+                  // updateToolTip();
                 }}
                 eventsSet={() => {
                   setTimeout(() => {

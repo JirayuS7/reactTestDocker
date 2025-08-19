@@ -160,7 +160,12 @@
 .fc-timegrid-slot[data-time="10:30:00"],
 .fc-timegrid-slot[data-time="11:00:00"],
 .fc-timegrid-slot[data-time="11:30:00"] {
-  background-color: rgba(173, 216, 230, 0.15) !important; /* Light blue for AM */
+  background-color: rgba(
+    173,
+    216,
+    230,
+    0.15
+  ) !important; /* Light blue for AM */
 }
 
 /* PM hours (12:00 PM to 9:59 PM) - Light orange background */
@@ -184,7 +189,12 @@
 .fc-timegrid-slot[data-time="20:30:00"],
 .fc-timegrid-slot[data-time="21:00:00"],
 .fc-timegrid-slot[data-time="21:30:00"] {
-  background-color: rgba(255, 228, 196, 0.15) !important; /* Light orange for PM */
+  background-color: rgba(
+    255,
+    228,
+    196,
+    0.15
+  ) !important; /* Light orange for PM */
 }
 
 /* Alternative approach using pseudo-elements for smoother gradients */
@@ -195,7 +205,11 @@
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(180deg, rgba(173, 216, 230, 0.1) 0%, rgba(173, 216, 230, 0.05) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(173, 216, 230, 0.1) 0%,
+    rgba(173, 216, 230, 0.05) 100%
+  );
   pointer-events: none;
   z-index: 1;
 }
@@ -207,7 +221,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(255, 228, 196, 0.05) 0%, rgba(255, 228, 196, 0.1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 228, 196, 0.05) 0%,
+    rgba(255, 228, 196, 0.1) 100%
+  );
   pointer-events: none;
   z-index: 1;
 }
@@ -233,7 +251,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -242,13 +260,13 @@
 
 .read-more-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
 .read-more-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Month view more link container */
@@ -309,7 +327,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -318,7 +336,7 @@
 
 .read-more-btn-week:hover {
   transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   background: linear-gradient(135deg, #ff6b6b 0%, #ff5757 100%);
 }
 
@@ -333,7 +351,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -342,7 +360,7 @@
 
 .read-more-btn-day:hover {
   transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
 }
 
@@ -357,7 +375,7 @@
   font-weight: 500 !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 2px !important;
@@ -368,7 +386,7 @@
 
 .read-more-btn-day-custom:hover {
   transform: translateY(-1px) scale(1.05) !important;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
   background: linear-gradient(135deg, #38a169 0%, #2f855a 100%) !important;
 }
 
@@ -405,4 +423,8 @@
 .fc-multimonth .fc-event:hover {
   transform: scale(1.05);
   z-index: 100 !important;
+}
+
+.day-event-title .fc-event-title {
+     text-overflow: ellipsis;
 }
