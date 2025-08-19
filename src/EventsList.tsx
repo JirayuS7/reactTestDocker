@@ -1,4 +1,5 @@
 import { Button, Space } from "antd";
+import { PlusCircleOutlined } from "@ant-design/icons";
 import { Draggable } from "@fullcalendar/interaction";
 import { useEffect, useRef } from "react";
 
@@ -43,7 +44,7 @@ export default function EventsList({ events }: EventsListProps) {
             className="fc-event"
             block
           >
-            {event.title}
+            {event.title} <PlusCircleOutlined />
           </Button>
         ))}
       </Space>
