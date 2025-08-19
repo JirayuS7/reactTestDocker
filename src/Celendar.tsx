@@ -306,7 +306,7 @@ export default function Calendar() {
     });
 
     // make link to month view
-        //  change tag div.fc-multimonth-title to be <a></a>
+    //  change tag div.fc-multimonth-title to be <a></a>
     document.querySelectorAll(".fc-multimonth-title").forEach((titleEl) => {
       // Skip if already has a link
       if (titleEl.querySelector("a")) return;
@@ -333,7 +333,21 @@ export default function Calendar() {
       titleEl.innerHTML = "";
       titleEl.appendChild(link);
     });
+  };
 
+  const updateToolTip = () => {
+    // change tool tip
+    document.querySelectorAll(".fc-event-title").forEach((titleEl) => {
+      const limitText = 10;
+      //  find text in titleEl
+      const eventText = titleEl.textContent || "";
+
+      if (eventText.length > limitText) {
+        titleEl.innerHTML = `<span style="float:right"> ...</span>`;
+
+        titleEl.setAttribute("title", eventText); // Set full text as tooltip
+      }
+    });
   };
 
   const handleDateClick = (date: Date) => {
@@ -346,52 +360,52 @@ export default function Calendar() {
   // Function to get the color of events for a specific date
 
   // Function to customize more links after calendar render
-  const customizeMoreLinks = () => {
-    if (currentView !== "multiMonthYear") return;
+  // const customizeMoreLinks = () => {
+  //   if (currentView !== "multiMonthYear") return;
 
-    setTimeout(() => {
-      const moreLinks = document.querySelectorAll(
-        ".fc-multimonth .fc-more-link"
-      );
+  //   setTimeout(() => {
+  //     const moreLinks = document.querySelectorAll(
+  //       ".fc-multimonth .fc-more-link"
+  //     );
 
-      moreLinks.forEach((link) => {
-        const linkElement = link as HTMLElement;
-        const text = linkElement.textContent || "";
-        const match = text.match(/\+ (\d+) more/);
+  //     moreLinks.forEach((link) => {
+  //       const linkElement = link as HTMLElement;
+  //       const text = linkElement.textContent || "";
+  //       const match = text.match(/\+ (\d+) more/);
 
-        if (match) {
-          const count = parseInt(match[1]);
+  //       if (match) {
+  //         const count = parseInt(match[1]);
 
-          // Get the date from the parent day cell
-          const dayCell = linkElement.closest(".fc-daygrid-day");
-          if (!dayCell) return;
+  //         // Get the date from the parent day cell
+  //         const dayCell = linkElement.closest(".fc-daygrid-day");
+  //         if (!dayCell) return;
 
-          const dateStr = dayCell.getAttribute("data-date");
-          if (!dateStr) return;
+  //         const dateStr = dayCell.getAttribute("data-date");
+  //         if (!dateStr) return;
 
-          // const date = new Date(dateStr + "T00:00:00");
-          // const eventColor = getEventColorForDate(date);
+  //         // const date = new Date(dateStr + "T00:00:00");
+  //         // const eventColor = getEventColorForDate(date);
 
-          if (count === 1) {
-            // Single event: show just a colored dot
-            // linkElement.innerHTML = `<span class="custom-single-event-dot" style="background-color: ${eventColor}"></span>`;
-            linkElement.innerHTML = `   <span class="custom-more-events">
-               
-                <span class="custom-more-text">+ ${count} more</span>
-              </span>`;
-          } else {
-            // Multiple events: show dot with text
-            linkElement.innerHTML = `
-              <span class="custom-more-events">
-               
-                <span class="custom-more-text">+ ${count} more</span>
-              </span>
-            `;
-          }
-        }
-      });
-    }, 200);
-  };
+  //         if (count === 1) {
+  //           // Single event: show just a colored dot
+  //           // linkElement.innerHTML = `<span class="custom-single-event-dot" style="background-color: ${eventColor}"></span>`;
+  //           linkElement.innerHTML = `   <span class="custom-more-events">
+
+  //               <span class="custom-more-text">+ ${count} more</span>
+  //             </span>`;
+  //         } else {
+  //           // Multiple events: show dot with text
+  //           linkElement.innerHTML = `
+  //             <span class="custom-more-events">
+
+  //               <span class="custom-more-text">+ ${count} more</span>
+  //             </span>
+  //           `;
+  //         }
+  //       }
+  //     });
+  //   }, 200);
+  // };
 
   //  confirm drop
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -417,7 +431,9 @@ export default function Calendar() {
 
   const ModalConfirm = (
     <Modal
-      title={`Select Event Duration  at ${dayjs(droppedEventInfo?.dateStr).format("YYYY-MM-DD") || "-"}`}
+      title={`Select Event Duration  at ${
+        dayjs(droppedEventInfo?.dateStr).format("YYYY-MM-DD") || "-"
+      }`}
       closable={{ "aria-label": "Custom Close Button" }}
       open={isModalOpen}
       footer={null}
@@ -457,6 +473,7 @@ export default function Calendar() {
 
   // Copy from FullCalendar source for default inner structure
   // function renderInnerContent(innerProps: any) {
+
   //   const limitText = 20;
   //   const eventTitle = innerProps.event.title || "\u00A0";
   //   const displayedTitle =
@@ -493,11 +510,7 @@ export default function Calendar() {
   //   }
   // }
   // const renderEventWithTooltip = (arg: any) => {
-  //   return (
-  //     <Tooltip title={arg.event.title} placement="top" arrow>
-  //       {renderInnerContent(arg)}
-  //     </Tooltip>
-  //   );
+  //   return renderInnerContent(arg);
   // };
 
   return (
@@ -609,41 +622,41 @@ export default function Calendar() {
                 }}
                 navLinks={true}
                 // Custom "read more" link content
-                moreLinkContent={(arg) => {
-                  if (currentView === "dayGridMonth") {
-                    return {
-                      html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`,
-                    };
-                  } else if (currentView === "multiMonthYear" && isDotView) {
-                    const eventCount = arg.num;
-                    // const dotColor = '#3788d8';
+                // moreLinkContent={(arg) => {
+                //   if (currentView === "dayGridMonth") {
+                //     return {
+                //       html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`,
+                //     };
+                //   } else if (currentView === "multiMonthYear" && isDotView) {
+                //     const eventCount = arg.num;
+                //     // const dotColor = '#3788d8';
 
-                    if (eventCount === 1) {
-                      return {
-                        html: `<span class="custom-more-events">
-                          
-                          <span class="custom-more-text">+ ${eventCount}  </span>
-                         </span>`,
-                      };
-                    } else {
-                      return {
-                        html: `<span class="custom-more-events">
-                          
-                          <span class="custom-more-text">+ ${eventCount}  </span>
-                         </span>`,
-                      };
-                    }
-                  } else if (currentView === "timeGridDay") {
-                    const eventCount = arg.num;
+                //     if (eventCount === 1) {
+                //       return {
+                //         html: `<span class="custom-more-events">
 
-                    if (eventCount === 1) {
-                      return `<span class="custom-more-events">
-                      <span class="custom-more-text">+ ${eventCount} </span>
-                    </span>`;
-                    }
-                  }
-                  return `+ ${arg.num} more`;
-                }}
+                //           <span class="custom-more-text">+ ${eventCount}  </span>
+                //          </span>`,
+                //       };
+                //     } else {
+                //       return {
+                //         html: `<span class="custom-more-events">
+
+                //           <span class="custom-more-text">+ ${eventCount}  </span>
+                //          </span>`,
+                //       };
+                //     }
+                //   } else if (currentView === "timeGridDay") {
+                //     const eventCount = arg.num;
+
+                //     if (eventCount === 1) {
+                //       return `<span class="custom-more-events">
+                //       <span class="custom-more-text">+ ${eventCount} </span>
+                //     </span>`;
+                //     }
+                //   }
+                //   return `+ ${arg.num} more`;
+                // }}
                 // moreLinkClick={handleMoreLinkClick}
                 // Custom event count display for year view
                 viewDidMount={(info) => {
@@ -655,9 +668,11 @@ export default function Calendar() {
                   if (info.view.type === "multiMonth") {
                     setTimeout(() => {
                       updateMonthTitles();
-                      customizeMoreLinks();
+                      // customizeMoreLinks();
                     }, 100);
                   }
+
+                  updateToolTip();
                 }}
                 eventsSet={() => {
                   setTimeout(() => {
@@ -665,9 +680,11 @@ export default function Calendar() {
                       calendarRef.current?.getApi().view.type === "multiMonth"
                     ) {
                       updateMonthTitles();
-                      customizeMoreLinks();
+                      // customizeMoreLinks();
                     }
                   }, 100);
+
+                  updateToolTip();
                 }}
                 navLinkDayClick={(date) => {
                   // When clicking on a day number, go to month view of that day
