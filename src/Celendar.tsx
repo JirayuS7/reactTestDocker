@@ -345,6 +345,7 @@ export default function Calendar() {
       if (eventText.length > limitText) {
         titleEl.innerHTML = `<span style="float:right"> ...</span>`;
 
+
         titleEl.setAttribute("title", eventText); // Set full text as tooltip
       }
     });
@@ -684,7 +685,7 @@ export default function Calendar() {
                     }
                   }, 100);
 
-                  updateToolTip();
+                  // updateToolTip();
                 }}
                 navLinkDayClick={(date) => {
                   // When clicking on a day number, go to month view of that day
