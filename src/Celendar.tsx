@@ -8,7 +8,6 @@ import { Button, Col, Modal, Row, Space, Tooltip } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
-// import UserLists from "./UserLists";
 import EventsList from "./EventsList";
 import interactionPlugin from "@fullcalendar/interaction";
 const events = [
@@ -251,7 +250,14 @@ export default function Calendar() {
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [eventDetailModal, setEventDetailModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<{
+    title: string;
+    start: Date;
+    end?: Date;
+    id: string;
+    color?: string;
+    key?: string;
+  } | null>(null);
   console.log("🚀 ~ Calendar ~ selectedEvent:", selectedEvent)
 
   // const [droppedEventInfo, setDroppedEventInfo] = useState<any>(null);
@@ -261,6 +267,8 @@ export default function Calendar() {
   //   setEventsList (events)
 
   // } ) , []
+
+ 
 
   const handleEventReceive = (info: any) => {
     // Check if the event has time information from the dragged button
@@ -287,6 +295,7 @@ export default function Calendar() {
         start: startDate,
         end: endDate,
         color: color,
+        key: "1", // Default key for dropped events
       };
 
       // check Duplicate
@@ -314,12 +323,9 @@ export default function Calendar() {
 
   useEffect(() => {
     if (selectedUser) {
-
-
-      const selectedUserEvents = eventsList.filter(
+      const selectedUserEvents = events.filter(
         (item) => item.key === selectedUser
       );
-
       setEventsList(selectedUserEvents);
     } else {
       setEventsList(events);
@@ -880,15 +886,17 @@ export default function Calendar() {
                 }}
                 eventClick={(info) => {
                   // Show event details modal instead of opening new page
-                  setSelectedEvent({
-                    title: info.event.title,
-                    start: info.event.start,
-                    end: info.event.end,
-                    id: info.event.id,
-                    color: info.event.backgroundColor || info.event.borderColor,
-                    key: info.event.extendedProps.key || "1",
-                  });
-                  setEventDetailModal(true);
+                  if (info.event.start) {
+                    setSelectedEvent({
+                      title: info.event.title,
+                      start: info.event.start,
+                      end: info.event.end || undefined,
+                      id: info.event.id,
+                      color: info.event.backgroundColor || info.event.borderColor,
+                      key: info.event.extendedProps.key || "1",
+                    });
+                    setEventDetailModal(true);
+                  }
                 }}
                 datesSet={updateMonthTitles} // runs on view change
                 eventAdd={updateMonthTitles} // runs when new event is added
