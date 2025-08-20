@@ -4,13 +4,12 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useRef, useState } from "react";
-import { Button, Col, Form, Modal, Row, Space, Tooltip } from "antd";
+import {  Col,  Row,   Tooltip } from "antd";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import UserLists from "./UserLists";
 import EventsList from "./EventsList";
 import interactionPlugin from "@fullcalendar/interaction";
-type LayoutType = Parameters<typeof Form>[0]["layout"];
 const events = [
   {
     id: "1",
@@ -201,6 +200,7 @@ export default function Calendar() {
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
   const [eventsList, setEventsList] = useState(events);
+  console.log("🚀 ~ Calendar ~ eventsList:", eventsList.length)
   const [externalEvents, setExternalEvents] = useState([
     {
       key: "event1",
@@ -216,7 +216,7 @@ export default function Calendar() {
     },
   ]);
 
-  const [droppedEventInfo, setDroppedEventInfo] = useState<any>(null);
+  // const [droppedEventInfo, setDroppedEventInfo] = useState<any>(null);
 
   // useEffect (() => {
 
@@ -225,55 +225,97 @@ export default function Calendar() {
   // } ) , []
 
   const handleEventReceive = (info: any) => {
-    // This function is now primarily for preventing the default event creation
-    // since we are handling it manually in `handleTimeSelection`.
-    console.log("Event received, but handled manually.", info.event);
-    info.event.remove(); // Remove the temporary event
+    // Check if the event has time information from the dragged button
+    const timeSlot = info.event.extendedProps?.timeSlot;
+    const startTime = info.event.extendedProps?.startTime;
+    const endTime = info.event.extendedProps?.endTime;
+    
+    if (timeSlot && startTime && endTime) {
+      // Automatically create event with the predefined time
+      const eventDate = info.event.start;
+      const startDate = new Date(eventDate);
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      startDate.setHours(startHour, startMinute, 0, 0);
+      
+      const endDate = new Date(eventDate);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+      endDate.setHours(endHour, endMinute, 0, 0);
+      
+      const color = timeSlot === 'morning' ? 'green' : 'blue';
+      
+      const newEvent = {
+        id: `event-${Date.now()}`,
+        title: info.event.title,
+        start: startDate,
+        end: endDate,
+        color: color,
+      };
+      
+
+      // check Duplicate 
+
+      const newList = eventsList.filter((event) => event.title !== newEvent.title);
+      // Add to events list
+      setEventsList(  [...newList, newEvent]);
+      
+      // Extract the original event title to remove from external list
+      // The title format is "EventTitle - Morning" or "EventTitle - Afternoon"
+      const titleParts = info.event.title.split(' - ');
+      const originalEventTitle = titleParts[0]; // Get the first part before " - "
+      
+      // Remove from external events by matching the original title
+      setExternalEvents((prevEvents) =>
+        prevEvents.filter((event) => event.title !== originalEventTitle)
+      );
+    }
+    
+    // Remove the temporary event that FullCalendar creates
+    info.event.remove();
   };
 
-  const handleTimeSelection = (startHour: number, endHour: number) => {
-    if (!droppedEventInfo) return;
+  // const handleTimeSelection = (startHour: number, endHour: number) => {
+  //   if (!droppedEventInfo) return;
 
-    const { date, draggedEl } = droppedEventInfo;
-    const title =
-      draggedEl.innerText ||
-      (draggedEl.getAttribute("data-event-title") ?? "New Event");
+  //   const { date, draggedEl } = droppedEventInfo;
+  //   const title =
+  //     draggedEl.innerText ||
+  //     (draggedEl.getAttribute("data-event-title") ?? "New Event");
 
-    const startDate = new Date(date);
-    startDate.setHours(startHour, 0, 0, 0);
+  //   const startDate = new Date(date);
+  //   startDate.setHours(startHour, 0, 0, 0);
 
-    const endDate = new Date(date);
-    endDate.setHours(endHour, 0, 0, 0);
+  //   const endDate = new Date(date);
+  //   endDate.setHours(endHour, 0, 0, 0);
 
-    let color = "#00000";
+  //   let color = "#00000";
 
-    if (startHour < 12) {
-      color = "green";
-    }
+  //   if (startHour < 12) {
+  //     color = "green";
+  //   }
 
-    if (startHour > 12) {
-      color = "blue";
-    }
+  //   if (startHour > 12) {
+  //     color = "blue";
+  //   }
 
-    const newEvent = {
-      id: `event-${Date.now()}`,
-      title: title,
-      start: startDate,
-      end: endDate,
-      color: color,
-    };
+  //   const newEvent = {
+  //     id: `event-${Date.now()}`,
+  //     title: title,
+  //     start: startDate,
+  //     end: endDate,
+  //     color: color,
+  //   };
 
-    setEventsList((prevEvents) => [...prevEvents, newEvent]);
-    setExternalEvents((prevEvents) =>
-      prevEvents.filter((event) => event.title !== title)
-    );
+  //   setEventsList((prevEvents) => [...prevEvents, newEvent]);
+  //   setExternalEvents((prevEvents) =>
+  //     prevEvents.filter((event) => event.title !== title)
+  //   );
 
-    // Also remove the original dragged element from the DOM
-    draggedEl.remove();
+  //   // Also remove the original dragged element from the DOM
+  //   draggedEl.remove();
 
-    setIsModalOpen(false);
-    setDroppedEventInfo(null);
-  };
+  //   // setIsModalOpen(false);
+  //   setDroppedEventInfo(null);
+  // };
 
   const updateMonthTitles = () => {
     setTimeout(() => {
@@ -411,66 +453,66 @@ export default function Calendar() {
   // };
 
   //  confirm drop
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
+  // const showModal = () => {
+  //   setIsModalOpen(true);
+  // };
 
   // const handleOk = () => {
   //   setIsModalOpen(false);
   // };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
+  // const handleCancel = () => {
+  //   setIsModalOpen(false);
+  // };
 
-  const [form] = Form.useForm();
-  const [formLayout, setFormLayout] = useState<LayoutType>("horizontal");
+  // const [form] = Form.useForm();
+  // const [formLayout, setFormLayout] = useState<LayoutType>("horizontal");
 
-  const onFormLayoutChange = ({ layout }: { layout: LayoutType }) => {
-    setFormLayout(layout);
-  };
+  // const onFormLayoutChange = ({ layout }: { layout: LayoutType }) => {
+  //   setFormLayout(layout);
+  // };
 
-  const ModalConfirm = (
-    <Modal
-      title={`Select Event Duration  at ${
-        dayjs(droppedEventInfo?.dateStr).format("YYYY-MM-DD") || "-"
-      }`}
-      closable={{ "aria-label": "Custom Close Button" }}
-      open={isModalOpen}
-      footer={null}
-      centered
-      onCancel={handleCancel}
-    >
-      <Form
-        layout={formLayout}
-        form={form}
-        initialValues={{ layout: formLayout }}
-        onValuesChange={onFormLayoutChange}
-        style={{ maxWidth: formLayout === "inline" ? "none" : 600 }}
-      >
-        <Form.Item name="layout">
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <Button
-              color="cyan"
-              variant="solid"
-              onClick={() => handleTimeSelection(6, 12)}
-            >
-              Morning Time : 06:00 - 12:00
-            </Button>
-            <Button
-              color="primary"
-              variant="solid"
-              onClick={() => handleTimeSelection(12, 18)}
-            >
-              Afternoon Time : 12:00 - 18:00
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
+  // const ModalConfirm = (
+  //   <Modal
+  //     title={`Select Event Duration  at ${
+  //       dayjs(droppedEventInfo?.dateStr).format("YYYY-MM-DD") || "-"
+  //     }`}
+  //     closable={{ "aria-label": "Custom Close Button" }}
+  //     open={isModalOpen}
+  //     footer={null}
+  //     centered
+  //     onCancel={handleCancel}
+  //   >
+  //     <Form
+  //       layout={formLayout}
+  //       form={form}
+  //       initialValues={{ layout: formLayout }}
+  //       onValuesChange={onFormLayoutChange}
+  //       style={{ maxWidth: formLayout === "inline" ? "none" : 600 }}
+  //     >
+  //       <Form.Item name="layout">
+  //         <Space direction="vertical" style={{ width: "100%" }}>
+  //           <Button
+  //             color="cyan"
+  //             variant="solid"
+  //             onClick={() => handleTimeSelection(6, 12)}
+  //           >
+  //             Morning Time : 06:00 - 12:00
+  //           </Button>
+  //           <Button
+  //             color="primary"
+  //             variant="solid"
+  //             onClick={() => handleTimeSelection(12, 18)}
+  //           >
+  //             Afternoon Time : 12:00 - 18:00
+  //           </Button>
+  //         </Space>
+  //       </Form.Item>
+  //     </Form>
+  //   </Modal>
+  // );
 
   //  tool tip
 
@@ -518,7 +560,7 @@ export default function Calendar() {
 
   return (
     <div>
-      {ModalConfirm}{" "}
+      {/* {ModalConfirm}{" "} */}
       <Row gutter={[16, 16]}>
         <Col span={6}>
           <EventsList events={externalEvents} />
@@ -709,9 +751,10 @@ export default function Calendar() {
                 eventRemove={updateMonthTitles} // runs when event removed
                 eventReceive={handleEventReceive}
                 drop={(info) => {
-                  setDroppedEventInfo(info);
-                  showModal();
+                  // Handle external event drop
+                  console.log("Dropped event:", info);
                 }}
+
               />
             </div>
           </div>

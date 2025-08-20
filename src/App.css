@@ -77,3 +77,5 @@ body {
 .fc-more-link {
   text-align: center;
 } 
+
+.ant-card-head-title { text-align: left;}
