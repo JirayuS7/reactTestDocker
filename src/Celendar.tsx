@@ -14,14 +14,16 @@ type LayoutType = Parameters<typeof Form>[0]["layout"];
 const events = [
   {
     id: "1",
-    title: "Team Meeting Now when you're in the Year view and click on any month name  ",
+    title:
+      "Team Meeting Now when you're in the Year view and click on any month name  ",
     start: new Date(), // Today
     end: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
     color: "#FFA500",
   },
   {
     id: "2b",
-    title: "Client Call  it will navigate to that month's detailed view. The navigation uses your existing",
+    title:
+      "Client Call  it will navigate to that month's detailed view. The navigation uses your existing",
     start: new Date(), // Today - another event same day
     color: "#FFA500",
   },
@@ -278,7 +280,7 @@ export default function Calendar() {
       updateToolTip();
     }, 500);
 
-    if (currentView !== "multiMonth") return;
+    // if (currentView !== "multiMonth") return;
 
     const calendarApi = calendarRef.current && calendarRef.current.getApi();
     const allEvents = calendarApi ? calendarApi.getEvents() : [];
@@ -305,6 +307,7 @@ export default function Calendar() {
         const year = match[2] || new Date().getFullYear();
         const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
         const key = `${year}-${monthIndex}`;
+        console.log("🚀 ~ updateMonthTitles ~ key:", key)
         const count = monthEventCounts[key] || 0;
         // Show as "MonthName (count)"
         titleEl.innerHTML = `  <span class="event-count"> (${count})</span> `;
@@ -345,13 +348,8 @@ export default function Calendar() {
     // change tool tip
     document.querySelectorAll(".day-event-title").forEach((titleEl) => {
       const eventText = titleEl.textContent || "";
-     
- 
-        titleEl.setAttribute("title", eventText); // Truncate text with ellipsis
 
-
-
-   
+      titleEl.setAttribute("title", eventText); // Truncate text with ellipsis
     });
   };
 
