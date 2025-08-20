@@ -3,11 +3,12 @@ import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
 // import interactionPlugin from "@fullcalendar/interaction";
-import { useRef, useState } from "react";
-import {  Col,  Row,   Tooltip } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Button, Col, Modal, Row, Space, Tooltip } from "antd";
+import { LinkOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
-import UserLists from "./UserLists";
+// import UserLists from "./UserLists";
 import EventsList from "./EventsList";
 import interactionPlugin from "@fullcalendar/interaction";
 const events = [
@@ -18,6 +19,7 @@ const events = [
     start: new Date(), // Today
     end: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
     color: "#FFA500",
+    key: "1",
   },
   {
     id: "2b",
@@ -25,78 +27,91 @@ const events = [
       "Client Call  it will navigate to that month's detailed view. The navigation uses your existing",
     start: new Date(), // Today - another event same day
     color: "#FFA500",
+    key: "1",
   },
   {
     id: "extra1",
     title: "Morning Standup",
     start: new Date(), // Today
     color: "#3788d8",
+    key: "2",
   },
   {
     id: "extra2",
     title: "Project Review",
     start: new Date(), // Today
     color: "#48bb78",
+    key: "2",
   },
   {
     id: "extra3",
     title: "Design Session",
     start: new Date(), // Today
     color: "#f56565",
+    key: "2",
   },
   {
     id: "extra4",
     title: "Code Review",
     start: new Date(), // Today
     color: "#ed8936",
+    key: "2",
   },
   {
     id: "extra5",
     title: "Team Lunch",
     start: new Date(), // Today
     color: "#9f7aea",
+    key: "2",
   },
   {
     id: "extra6",
     title: "Sprint Planning",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "3",
   },
   {
     id: "extra7",
     title: "Sprint Planning 2",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "3",
   },
   {
     id: "extra8",
     title: "Sprint Planning 8",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "3",
   },
   {
     id: "extra9",
     title: "Sprint Planning 9",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "3",
   },
   {
     id: "extra10",
     title: "Sprint Planning 10",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "3",
   },
   {
     id: "extra11",
     title: "Sprint Planning 11",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "3",
   },
   {
     id: "extra12",
     title: "Sprint Planning 12",
     start: new Date(), // Today
     color: "#38b2ac",
+    key: "4",
   },
   {
     id: "extra7",
@@ -104,6 +119,7 @@ const events = [
     start: dayjs("2025-08-15 08:00").toDate(),
     end: dayjs("2025-08-15 09:00").toDate(),
     color: "#d69e2e",
+    key: "4",
   },
   {
     id: "extra8",
@@ -111,6 +127,7 @@ const events = [
     start: dayjs("2025-08-15 09:00").toDate(),
     end: dayjs("2025-08-15 10:00").toDate(),
     color: "#e53e3e",
+    key: "4",
   },
 
   {
@@ -119,6 +136,7 @@ const events = [
     start: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // Tomorrow
     end: new Date(new Date().getTime() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000), // 1 hour
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "4",
@@ -128,12 +146,14 @@ const events = [
       new Date().setDate(new Date().getDate() + 2) + 90 * 60 * 1000
     ), // 1.5 hours
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "4b",
     title: "Design Review",
     start: new Date(new Date().setDate(new Date().getDate() + 2)), // Day after tomorrow - same day
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "5",
@@ -141,6 +161,7 @@ const events = [
     start: dayjs("2025-08-11 15:00").toDate(),
     end: dayjs("2025-08-11 16:00").toDate(),
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "6",
@@ -148,6 +169,7 @@ const events = [
     start: dayjs("2025-08-11 14:00").toDate(),
     end: dayjs("2025-08-11 13:00").toDate(),
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "7",
@@ -155,6 +177,7 @@ const events = [
     start: dayjs("2025-08-11 13:00").toDate(),
     end: dayjs("2025-08-11 14:00").toDate(),
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "8",
@@ -162,6 +185,7 @@ const events = [
     start: dayjs("2025-08-11 16:00").toDate(),
     end: dayjs("2025-08-11 16:30").toDate(),
     color: "#FFA500",
+    key: "4",
   },
   {
     id: "9",
@@ -169,6 +193,7 @@ const events = [
     start: dayjs("2025-08-11 16:30").toDate(),
     end: dayjs("2025-08-11 17:00").toDate(),
     color: "#FFA500",
+    key: "3",
   },
 
   {
@@ -177,6 +202,7 @@ const events = [
     start: dayjs("2025-08-11 8:30").toDate(),
     end: dayjs("2025-08-11 9:00").toDate(),
     color: "blue",
+    key: "3",
   },
   {
     id: "11",
@@ -184,6 +210,7 @@ const events = [
     start: dayjs("2025-08-11 9.00").toDate(),
     end: dayjs("2025-08-11 11:00").toDate(),
     color: "blue",
+    key: "3",
   },
   {
     id: "12",
@@ -191,6 +218,7 @@ const events = [
     start: dayjs("2025-08-11 11.00").toDate(),
     end: dayjs("2025-08-11 11:15").toDate(),
     color: "blue",
+    key: "3",
   },
 ];
 
@@ -200,21 +228,31 @@ export default function Calendar() {
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
   const [eventsList, setEventsList] = useState(events);
-  console.log("🚀 ~ Calendar ~ eventsList:", eventsList.length)
-  const [externalEvents, setExternalEvents] = useState([
+
+  const [userEvents] = useState([
     {
-      key: "event1",
-      title: "Events List 1",
+      key: "1",
+      title: "Alex bot Brown",
     },
     {
-      key: "event2",
-      title: "Events List 2",
+      key: "2",
+      title: "Samantha Brown",
     },
     {
-      key: "event3",
-      title: "Events List 3",
+      key: "3",
+      title: "Desmond Brown",
+    },
+
+    {
+      key: "4",
+      title: "Charlie Brown",
     },
   ]);
+
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [eventDetailModal, setEventDetailModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  console.log("🚀 ~ Calendar ~ selectedEvent:", selectedEvent)
 
   // const [droppedEventInfo, setDroppedEventInfo] = useState<any>(null);
 
@@ -229,20 +267,20 @@ export default function Calendar() {
     const timeSlot = info.event.extendedProps?.timeSlot;
     const startTime = info.event.extendedProps?.startTime;
     const endTime = info.event.extendedProps?.endTime;
-    
+
     if (timeSlot && startTime && endTime) {
       // Automatically create event with the predefined time
       const eventDate = info.event.start;
       const startDate = new Date(eventDate);
-      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [startHour, startMinute] = startTime.split(":").map(Number);
       startDate.setHours(startHour, startMinute, 0, 0);
-      
+
       const endDate = new Date(eventDate);
-      const [endHour, endMinute] = endTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(":").map(Number);
       endDate.setHours(endHour, endMinute, 0, 0);
-      
-      const color = timeSlot === 'morning' ? 'green' : 'blue';
-      
+
+      const color = timeSlot === "morning" ? "green" : "blue";
+
       const newEvent = {
         id: `event-${Date.now()}`,
         title: info.event.title,
@@ -250,28 +288,43 @@ export default function Calendar() {
         end: endDate,
         color: color,
       };
-      
 
-      // check Duplicate 
+      // check Duplicate
 
-      const newList = eventsList.filter((event) => event.title !== newEvent.title);
+      const newList = eventsList.filter(
+        (event) => event.title !== newEvent.title
+      );
       // Add to events list
-      setEventsList(  [...newList, newEvent]);
-      
+      setEventsList([...newList, newEvent]);
+
       // Extract the original event title to remove from external list
       // The title format is "EventTitle - Morning" or "EventTitle - Afternoon"
-      const titleParts = info.event.title.split(' - ');
-      const originalEventTitle = titleParts[0]; // Get the first part before " - "
-      
+      // const titleParts = info.event.title.split(' - ');
+      // const originalEventTitle = titleParts[0]; // Get the first part before " - "
+
       // Remove from external events by matching the original title
-      setExternalEvents((prevEvents) =>
-        prevEvents.filter((event) => event.title !== originalEventTitle)
-      );
+      // setExternalEvents((prevEvents) =>
+      //   prevEvents.filter((event) => event.title !== originalEventTitle)
+      // );
     }
-    
+
     // Remove the temporary event that FullCalendar creates
     info.event.remove();
   };
+
+  useEffect(() => {
+    if (selectedUser) {
+
+
+      const selectedUserEvents = eventsList.filter(
+        (item) => item.key === selectedUser
+      );
+
+      setEventsList(selectedUserEvents);
+    } else {
+      setEventsList(events);
+    }
+  }, [selectedUser]);
 
   // const handleTimeSelection = (startHour: number, endHour: number) => {
   //   if (!droppedEventInfo) return;
@@ -349,7 +402,7 @@ export default function Calendar() {
         const year = match[2] || new Date().getFullYear();
         const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth() + 1;
         const key = `${year}-${monthIndex}`;
-        console.log("🚀 ~ updateMonthTitles ~ key:", key)
+        console.log("🚀 ~ updateMonthTitles ~ key:", key);
         const count = monthEventCounts[key] || 0;
         // Show as "MonthName (count)"
         titleEl.innerHTML = `  <span class="event-count"> (${count})</span> `;
@@ -558,13 +611,97 @@ export default function Calendar() {
   //   return renderInnerContent(arg);
   // };
 
+  const EventDetailModal = (
+    <Modal
+      title="Event Details"
+      open={eventDetailModal}
+      onCancel={() => setEventDetailModal(false)}
+      footer={[
+        <Button key="see-more" onClick={() => setEventDetailModal(false)} color="default" variant="dashed"
+        >
+        <LinkOutlined />  See More
+        </Button>,
+        <Button key="close" onClick={() => setEventDetailModal(false)}>
+          Close
+        </Button>,
+      ]}
+      width={600}
+    >
+      {selectedEvent && (
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <div>
+            <strong>Title:</strong> {selectedEvent.title}
+          </div>
+
+           <div>
+            <strong>User :</strong> {userEvents.find((user) => user.key === selectedEvent.key)?.title || "All Users"}
+          </div>
+          <div>
+            <strong>Start:</strong>{" "}
+            {dayjs(selectedEvent.start).format("YYYY-MM-DD HH:mm")}
+          </div>
+          {selectedEvent.end && (
+            <div>
+              <strong>End:</strong>{" "}
+              {dayjs(selectedEvent.end).format("YYYY-MM-DD HH:mm")}
+            </div>
+          )}
+          <div>
+            <strong>Duration:</strong>{" "}
+            {selectedEvent.end
+              ? `${dayjs(selectedEvent.end).diff(
+                  dayjs(selectedEvent.start),
+                  "hour",
+                  true
+                )} hours`
+              : "All day"}
+          </div>
+          <div>
+            <strong>Description:</strong>
+            <div
+              style={{
+                background: "#f5f5f5",
+                padding: "10px",
+                borderRadius: "4px",
+                marginTop: "8px",
+                maxHeight: "200px",
+                overflowY: "auto",
+              }}
+            >
+              {selectedEvent.title.length > 100 ? (
+                <>
+                  {selectedEvent.title}
+                  <br />
+                  <br />
+                  <em>
+                    This is a sample description for the event. You can add more
+                    detailed information about the event here, including
+                    location, attendees, agenda, and any other relevant details.
+                  </em>
+                </>
+              ) : (
+                selectedEvent.title
+              )}
+            </div>
+          </div>
+        
+        </Space>
+      )}
+    </Modal>
+  );
+
   return (
     <div>
+      {EventDetailModal}
       {/* {ModalConfirm}{" "} */}
       <Row gutter={[16, 16]}>
         <Col span={6}>
-          <EventsList events={externalEvents} />
-          <UserLists />
+          <EventsList
+            events={userEvents}
+            selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
+          />
+          {/* <UserLists /> */}
         </Col>
         <Col span={18}>
           <div className="calendar-container">
@@ -742,8 +879,16 @@ export default function Calendar() {
                   handleDateClick(weekStart);
                 }}
                 eventClick={(info) => {
-                  // link to new page
-                  window.open(info.event.url, "_blank");
+                  // Show event details modal instead of opening new page
+                  setSelectedEvent({
+                    title: info.event.title,
+                    start: info.event.start,
+                    end: info.event.end,
+                    id: info.event.id,
+                    color: info.event.backgroundColor || info.event.borderColor,
+                    key: info.event.extendedProps.key || "1",
+                  });
+                  setEventDetailModal(true);
                 }}
                 datesSet={updateMonthTitles} // runs on view change
                 eventAdd={updateMonthTitles} // runs when new event is added
@@ -754,7 +899,6 @@ export default function Calendar() {
                   // Handle external event drop
                   console.log("Dropped event:", info);
                 }}
-
               />
             </div>
           </div>

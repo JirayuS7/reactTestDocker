@@ -428,3 +428,11 @@
 .day-event-title .fc-event-title {
      text-overflow: ellipsis;
 }
+
+.ant-card { cursor: pointer;}
+
+.selectedCard { 
+  background-color: #e6f4ff;
+}
+
+.fc-event { cursor: move;}

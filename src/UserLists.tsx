@@ -17,27 +17,29 @@ const data = [
   },
 ];
 
-const UserLists: React.FC = () => (
-  <>
-    <h3>User Lists</h3>
-    <List
-      itemLayout="horizontal"
-      dataSource={data}
-      className="user-lists"
-      renderItem={(item, index) => (
-        <List.Item>
-          <List.Item.Meta
-            avatar={
-              <Avatar
-                src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${index}`}
-              />
-            }
-            title={<a href="https://ant.design">{item.title}</a>}
-          />
-        </List.Item>
-      )}
-    />
-  </>
-);
+const UserLists: React.FC = () => {
+  return (
+    <>
+      <h3>User Lists</h3>
+      <List
+        itemLayout="horizontal"
+        dataSource={data}
+        className="user-lists "
+        renderItem={(item, index) => (
+          <List.Item>
+            <List.Item.Meta
+              avatar={
+                <Avatar
+                  src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${index}`}
+                />
+              }
+              title={<a href="https://ant.design">{item.title}</a>}
+            />
+          </List.Item>
+        )}
+      />
+    </>
+  );
+};
 
 export default UserLists;
