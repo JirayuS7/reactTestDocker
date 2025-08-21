@@ -323,12 +323,13 @@ export default function Calendar() {
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '12px',
+        
         fontWeight: eventsCount >= MAX_EVENTS_PER_DATE - 2 ? 'bold' : 'normal'
       }}>
         {dayNumber}
         {warningIcon}
         {eventsCount > 0 && (
-          <span style={{ 
+          <span  style={{ 
             fontSize: '8px', 
             marginLeft: '2px',
             opacity: 0.7
