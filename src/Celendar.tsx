@@ -2,7 +2,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, WarningOutlined } from "@ant-design/icons";
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
@@ -50,6 +50,13 @@ interface FullCalendarEventInfo {
     };
     remove: () => void;
   };
+  revert?: () => void;
+}
+
+interface DayCellContentArg {
+  date: Date;
+  dayNumberText: string;
+  isOther: boolean;
 }
 
 const events: CalendarEvent[] = [
@@ -268,6 +275,70 @@ export default function Calendar() {
 
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
+  const [eventLimitModal, setEventLimitModal] = useState(false);
+  const [limitWarningInfo, setLimitWarningInfo] = useState<{
+    date: string;
+    eventCount: number;
+  } | null>(null);
+
+  // Maximum events allowed per date
+  const MAX_EVENTS_PER_DATE = 7;
+
+  // Helper function to count events on a specific date
+  const countEventsOnDate = useCallback((targetDate: Date, eventsList: CalendarEvent[]) => {
+    const targetDateStr = dayjs(targetDate).format('YYYY-MM-DD');
+    return eventsList.filter(event => {
+      const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
+      return eventDateStr === targetDateStr;
+    }).length;
+  }, []);
+
+  // Custom day cell content to show event count and warnings
+  const renderDayCellContent = (dayInfo: DayCellContentArg) => {
+    const date = dayInfo.date;
+    const dayNumber = dayInfo.dayNumberText;
+    const eventsCount = countEventsOnDate(date, allEvents);
+    
+    let backgroundColor = '';
+    let textColor = '';
+    let warningIcon = null;
+    
+    if (eventsCount >= MAX_EVENTS_PER_DATE) {
+      backgroundColor = '#fff2f0';
+      textColor = '#ff4d4f';
+      warningIcon = <CloseCircleOutlined style={{ fontSize: '10px', marginLeft: '2px' }} />;
+    } else if (eventsCount >= MAX_EVENTS_PER_DATE - 2) {
+      backgroundColor = '#fff7e6';
+      textColor = '#fa8c16';
+      warningIcon = <WarningOutlined style={{ fontSize: '10px', marginLeft: '2px' }} />;
+    }
+    
+    return (
+      <div style={{ 
+        backgroundColor, 
+        color: textColor, 
+        padding: '2px 4px',
+        borderRadius: '3px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px',
+        fontWeight: eventsCount >= MAX_EVENTS_PER_DATE - 2 ? 'bold' : 'normal'
+      }}>
+        {dayNumber}
+        {warningIcon}
+        {eventsCount > 0 && (
+          <span style={{ 
+            fontSize: '8px', 
+            marginLeft: '2px',
+            opacity: 0.7
+          }}>
+            ({eventsCount})
+          </span>
+        )}
+      </div>
+    );
+  };
 
   // Store the original/full events list separately from filtered view
   const [allEvents, setAllEvents] = useState(() => {
@@ -398,6 +469,23 @@ export default function Calendar() {
     const endTime = info.event.extendedProps?.endTime;
 
     if (timeSlot && startTime && endTime && info.event.start) {
+      // Check event limit for the target date
+      const targetDate = info.event.start;
+      const eventsOnTargetDate = countEventsOnDate(targetDate, allEvents);
+      
+      if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
+        // Show warning modal and prevent event creation
+        setLimitWarningInfo({
+          date: dayjs(targetDate).format('YYYY-MM-DD'),
+          eventCount: eventsOnTargetDate
+        });
+        setEventLimitModal(true);
+        
+        // Remove the temporary event that FullCalendar creates
+        info.event.remove();
+        return;
+      }
+
       // Automatically create event with the predefined time
       const eventDate = info.event.start;
       const startDate = new Date(eventDate);
@@ -485,6 +573,39 @@ export default function Calendar() {
   const handleEventDrop = (info: FullCalendarEventInfo) => {
     if (!info.event.start) return;
 
+    // Check if moving to a different date
+    const newDate = info.event.start;
+    const oldEvent = allEvents.find((event: CalendarEvent) => event.id === info.event.id);
+    
+    if (oldEvent) {
+      const oldDateStr = dayjs(oldEvent.start).format('YYYY-MM-DD');
+      const newDateStr = dayjs(newDate).format('YYYY-MM-DD');
+      
+      // If moving to a different date, check the event limit
+      if (oldDateStr !== newDateStr) {
+        // Count events on target date (excluding the event being moved)
+        const eventsOnTargetDate = allEvents.filter((event: CalendarEvent) => {
+          const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
+          return eventDateStr === newDateStr && event.id !== info.event.id;
+        }).length;
+        
+        if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
+          // Show warning modal and revert the move
+          setLimitWarningInfo({
+            date: newDateStr,
+            eventCount: eventsOnTargetDate
+          });
+          setEventLimitModal(true);
+          
+          // Revert the event to its original position
+          if (info.revert) {
+            info.revert();
+          }
+          return;
+        }
+      }
+    }
+
     const updatedEvent: CalendarEvent = {
       id: info.event.id,
       title: info.event.title,
@@ -516,6 +637,12 @@ export default function Calendar() {
 
   // Handle event resize to change duration
   const handleEventResize = (info: FullCalendarEventInfo) => {
+
+
+    // const startDate = info.event.start;
+    // const allEvent = allEvents;
+
+
     if (!info.event.start) return;
 
     const updatedEvent: CalendarEvent = {
@@ -962,6 +1089,62 @@ export default function Calendar() {
   //   return renderInnerContent(arg);
   // };
 
+  const EventLimitModal = (
+    <Modal
+      title="Event Limit Reached"
+      open={eventLimitModal}
+      onCancel={() => setEventLimitModal(false)}
+      footer={[
+        <Button 
+          key="ok" 
+          type="primary" 
+          onClick={() => setEventLimitModal(false)}
+        >
+          OK, I understand
+        </Button>
+      ]}
+      width={500}
+    >
+      {limitWarningInfo && (
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+            <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: '24px', marginRight: '12px' }} />
+            <div>
+              <h3 style={{ margin: 0, color: '#ff4d4f' }}>Cannot Add More Events</h3>
+              <p style={{ margin: '4px 0 0 0', color: '#666' }}>Maximum event limit reached for this date</p>
+            </div>
+          </div>
+          
+          <div style={{ 
+            background: '#fff2f0', 
+            border: '1px solid #ffccc7', 
+            borderRadius: '6px', 
+            padding: '12px',
+            marginBottom: '16px'
+          }}>
+            <div><strong>Date:</strong> {dayjs(limitWarningInfo.date).format('dddd, MMMM D, YYYY')}</div>
+            <div><strong>Current Events:</strong> {limitWarningInfo.eventCount}</div>
+            <div><strong>Maximum Allowed:</strong> {MAX_EVENTS_PER_DATE} events per day</div>
+          </div>
+          
+          <div style={{ 
+            background: '#f6ffed', 
+            border: '1px solid #b7eb8f', 
+            borderRadius: '6px', 
+            padding: '12px'
+          }}>
+            <strong>💡 Suggestions:</strong>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+              <li>Try adding the event to a different date</li>
+              <li>Remove an existing event from this date first</li>
+              <li>Consider combining similar events</li>
+            </ul>
+          </div>
+        </Space>
+      )}
+    </Modal>
+  );
+
   const EditEventModal = (
     <Modal
       title="Edit Event"
@@ -1227,6 +1410,7 @@ export default function Calendar() {
   return (
     <div>
       {contextHolder}
+      {EventLimitModal}
       {EditEventModal}
       {EventDetailModal}
       {/* {ModalConfirm}{" "} */}
@@ -1270,6 +1454,7 @@ export default function Calendar() {
                 droppable={true}
                 events={eventsList}
                 height="100vh" // Set explicit height
+                dayCellContent={renderDayCellContent} // Custom day cell content with event count
                 headerToolbar={{
                   left: "prev,next today",
                   center: "title",
@@ -1439,6 +1624,8 @@ export default function Calendar() {
                 drop={(info) => {
                   // Handle external event drop
                   console.log("Dropped event:", info);
+
+                  
                 }}
               />
             </div>
