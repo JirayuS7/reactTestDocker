@@ -59,7 +59,7 @@ export default function EventsList({
 
   return (
     <div ref={containerRef}>
-      <h3>User List </h3>
+      <h3>User List ({events.length}) </h3>
 
       <Space direction="vertical">
         {events.map((event) => (
@@ -109,20 +109,20 @@ export default function EventsList({
       </Space>
 
 
-      <div style={{ marginTop: "16px" }}>
-         <Button color="primary" variant="filled"
-            onClick={
-              () => {
-                // Clear all events logic
-                setSelectedUser(null);
-              }
-            }
-         
-         >
-            Clear All
-          </Button>
 
-      </div>
+        {selectedUser &&      <div style={{ marginTop: "16px" }}>
+        <Button
+          color="primary"
+          variant="filled"
+          onClick={() => {
+            // Clear all events logic
+            setSelectedUser(null);
+          }}
+        >
+          Clear All
+        </Button>
+      </div>}
+ 
     </div>
   );
 }

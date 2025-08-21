@@ -2,10 +2,23 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
+import { CheckCircleOutlined, SmileOutlined } from '@ant-design/icons';
 // import interactionPlugin from "@fullcalendar/interaction";
-import { useEffect, useRef, useState } from "react";
-import { Button, Col, Modal, Row, Space, Tooltip } from "antd";
-import { LinkOutlined } from "@ant-design/icons";
+import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  Button,
+  Col,
+  Modal,
+  Row,
+  Space,
+  Tooltip,
+  DatePicker,
+  TimePicker,
+  Form,
+  notification,
+  message,
+} from "antd";
+import { LinkOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import EventsList from "./EventsList";
@@ -226,7 +239,44 @@ export default function Calendar() {
 
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
-  const [eventsList, setEventsList] = useState(events);
+
+  // Store the original/full events list separately from filtered view
+  const [allEvents, setAllEvents] = useState(() => {
+    const savedEvents = localStorage.getItem('calendarEvents');
+    if (savedEvents) {
+      try {
+        const parsedEvents = JSON.parse(savedEvents);
+        return parsedEvents.map((event: any) => ({
+          ...event,
+          start: new Date(event.start),
+          end: event.end ? new Date(event.end) : undefined,
+        }));
+      } catch (error) {
+        console.error('Error parsing saved events:', error);
+        return events;
+      }
+    }
+    return events;
+  });
+
+  // Filtered events for display (based on selected user)
+  const [eventsList, setEventsList] = useState(() => {
+    const savedEvents = localStorage.getItem('calendarEvents');
+    if (savedEvents) {
+      try {
+        const parsedEvents = JSON.parse(savedEvents);
+        return parsedEvents.map((event: any) => ({
+          ...event,
+          start: new Date(event.start),
+          end: event.end ? new Date(event.end) : undefined,
+        }));
+      } catch (error) {
+        console.error('Error parsing saved events:', error);
+        return events;
+      }
+    }
+    return events;
+  });
 
   const [userEvents] = useState([
     {
@@ -250,6 +300,7 @@ export default function Calendar() {
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [eventDetailModal, setEventDetailModal] = useState(false);
+  const [eventEditModal, setEventEditModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<{
     title: string;
     start: Date;
@@ -258,7 +309,41 @@ export default function Calendar() {
     color?: string;
     key?: string;
   } | null>(null);
-  console.log("🚀 ~ Calendar ~ selectedEvent:", selectedEvent)
+  const [editingEvent, setEditingEvent] = useState<{
+    title: string;
+    start: Date;
+    end?: Date;
+    id: string;
+    color?: string;
+    key?: string;
+  } | null>(null);
+ 
+
+  // Function to save events to localStorage
+  const saveEventsToLocalStorage = useCallback((events: typeof allEvents) => {
+    try {
+      localStorage.setItem("calendarEvents", JSON.stringify(events));
+      console.log("Events saved to localStorage:", events.length, "events");
+    } catch (error) {
+      console.error("Error saving events to localStorage:", error);
+      message.error("Failed to save events to local storage");
+    }
+  }, []);
+
+  // Function to reset events to original data
+  const resetEventsToOriginal = () => {
+    setAllEvents(events);
+    setEventsList(events);
+    localStorage.removeItem("calendarEvents");
+    message.success("Events reset to original data");
+  };
+
+  // Save events to localStorage whenever allEvents changes
+  useEffect(() => {
+    if (allEvents !== events) { // Only save if events have been modified
+      saveEventsToLocalStorage(allEvents);
+    }
+  }, [allEvents, saveEventsToLocalStorage]);
 
   // const [droppedEventInfo, setDroppedEventInfo] = useState<any>(null);
 
@@ -267,8 +352,6 @@ export default function Calendar() {
   //   setEventsList (events)
 
   // } ) , []
-
- 
 
   const handleEventReceive = (info: any) => {
     // Check if the event has time information from the dragged button
@@ -299,12 +382,31 @@ export default function Calendar() {
       };
 
       // check Duplicate
+      interface CalendarEvent {
+        id: string;
+        title: string;
+        start: Date;
+        end?: Date;
+        color?: string;
+        key?: string;
+      }
 
-      const newList = eventsList.filter(
-        (event) => event.title !== newEvent.title
+      const newList: CalendarEvent[] = allEvents.filter(
+        (event: CalendarEvent) => event.title !== newEvent.title
       );
       // Add to events list
-      setEventsList([...newList, newEvent]);
+      const updatedAllEvents = [...newList, newEvent];
+      setAllEvents(updatedAllEvents);
+      
+      // Update filtered list based on current user selection
+      if (selectedUser) {
+        const filteredEvents = updatedAllEvents.filter(
+          (event) => event.key === selectedUser
+        );
+        setEventsList(filteredEvents);
+      } else {
+        setEventsList(updatedAllEvents);
+      }
 
       // Extract the original event title to remove from external list
       // The title format is "EventTitle - Morning" or "EventTitle - Afternoon"
@@ -323,14 +425,132 @@ export default function Calendar() {
 
   useEffect(() => {
     if (selectedUser) {
-      const selectedUserEvents = events.filter(
-        (item) => item.key === selectedUser
+      interface CalendarEvent {
+        id: string;
+        title: string;
+        start: Date;
+        end?: Date;
+        color?: string;
+        key?: string;
+      }
+
+      const selectedUserEvents: CalendarEvent[] = allEvents.filter(
+        (item: CalendarEvent) => item.key === selectedUser
       );
       setEventsList(selectedUserEvents);
     } else {
-      setEventsList(events);
+      setEventsList(allEvents);
     }
-  }, [selectedUser]);
+  }, [selectedUser, allEvents]);
+
+  // Handle event drag and drop to change dates
+  const handleEventDrop = (info: any) => {
+    const updatedEvent = {
+      ...info.event.extendedProps,
+      id: info.event.id,
+      title: info.event.title,
+      start: info.event.start,
+      end: info.event.end,
+      color: info.event.backgroundColor || info.event.borderColor,
+      key: info.event.extendedProps.key || "1",
+    };
+
+    // Update allEvents
+    const updatedAllEvents = allEvents.map((event) =>
+      event.id === updatedEvent.id ? updatedEvent : event
+    );
+    setAllEvents(updatedAllEvents);
+
+    // Update filtered events
+    setEventsList((prevEvents) =>
+      prevEvents.map((event) =>
+        event.id === updatedEvent.id ? updatedEvent : event
+      )
+    );
+
+    message.success(
+      `Event "${info.event.title}" moved to ${dayjs(info.event.start).format(
+        "YYYY-MM-DD HH:mm"
+      )}`
+    );
+  };
+
+  // Handle event resize to change duration
+  const handleEventResize = (info: any) => {
+    const updatedEvent = {
+      ...info.event.extendedProps,
+      id: info.event.id,
+      title: info.event.title,
+      start: info.event.start,
+      end: info.event.end,
+      color: info.event.backgroundColor || info.event.borderColor,
+      key: info.event.extendedProps.key || "1",
+    };
+
+    // Update allEvents
+    const updatedAllEvents = allEvents.map((event) =>
+      event.id === updatedEvent.id ? updatedEvent : event
+    );
+    setAllEvents(updatedAllEvents);
+
+    // Update filtered events
+    setEventsList((prevEvents) =>
+      prevEvents.map((event) =>
+        event.id === updatedEvent.id ? updatedEvent : event
+      )
+    );
+
+    const duration = dayjs(info.event.end).diff(
+      dayjs(info.event.start),
+      "hour",
+      true
+    );
+    message.success(
+      `Event "${info.event.title}" duration changed to ${duration} hours`
+    );
+  };
+
+  // Handle manual event editing through form
+  const handleEventEdit = (values: any) => {
+    if (!editingEvent) return;
+
+    const startDate = dayjs(values.date)
+      .hour(dayjs(values.startTime).hour())
+      .minute(dayjs(values.startTime).minute())
+      .toDate();
+    const endDate = values.endTime
+      ? dayjs(values.date)
+          .hour(dayjs(values.endTime).hour())
+          .minute(dayjs(values.endTime).minute())
+          .toDate()
+      : undefined;
+
+    const updatedEvent = {
+      id: editingEvent.id,
+      title: editingEvent.title,
+      start: startDate,
+      end: endDate,
+      color: editingEvent.color || "#3788d8",
+      key: editingEvent.key || "1",
+    };
+
+    // Update allEvents
+    const updatedAllEvents = allEvents.map((event) =>
+      event.id === editingEvent.id ? updatedEvent : event
+    );
+    setAllEvents(updatedAllEvents);
+
+    // Update filtered events
+    setEventsList((prevEvents) =>
+      prevEvents.map((event) =>
+        event.id === editingEvent.id ? updatedEvent : event
+      )
+    );
+
+    setEventEditModal(false);
+    setEditingEvent(null);
+    message.success(`Event "${editingEvent.title}" updated successfully`);
+  };
 
   // const handleTimeSelection = (startHour: number, endHour: number) => {
   //   if (!droppedEventInfo) return;
@@ -617,15 +837,109 @@ export default function Calendar() {
   //   return renderInnerContent(arg);
   // };
 
+  const EditEventModal = (
+    <Modal
+      title="Edit Event"
+      open={eventEditModal}
+      onCancel={() => {
+        setEventEditModal(false);
+        setEditingEvent(null);
+      }}
+      footer={null}
+      width={600}
+    >
+      {editingEvent && (
+        <Form
+          layout="vertical"
+          onFinish={handleEventEdit}
+          initialValues={{
+            date: dayjs(editingEvent.start),
+            startTime: dayjs(editingEvent.start),
+            endTime: editingEvent.end ? dayjs(editingEvent.end) : undefined,
+          }}
+        >
+          <Form.Item
+            label="Event Title"
+            name="title"
+            initialValue={editingEvent.title}
+          >
+            <div
+              style={{
+                padding: "8px",
+                background: "#f5f5f5",
+                borderRadius: "4px",
+              }}
+            >
+              {editingEvent.title}
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            label="Date"
+            name="date"
+            rules={[{ required: true, message: "Please select a date" }]}
+          >
+            <DatePicker style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Space size="large" style={{ width: "100%" }}>
+            <Form.Item
+              label="Start Time"
+              name="startTime"
+              rules={[{ required: true, message: "Please select start time" }]}
+            >
+              <TimePicker format="HH:mm" />
+            </Form.Item>
+
+            <Form.Item label="End Time" name="endTime">
+              <TimePicker format="HH:mm" />
+            </Form.Item>
+          </Space>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Update Event
+              </Button>
+              <Button
+                onClick={() => {
+                  setEventEditModal(false);
+                  setEditingEvent(null);
+                }}
+              >
+                Cancel
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      )}
+    </Modal>
+  );
+
   const EventDetailModal = (
     <Modal
       title="Event Details"
       open={eventDetailModal}
       onCancel={() => setEventDetailModal(false)}
       footer={[
-        <Button key="see-more" onClick={() => setEventDetailModal(false)} color="default" variant="dashed"
+        <Button
+          key="edit"
+          onClick={() => {
+            setEditingEvent(selectedEvent);
+            setEventDetailModal(false);
+            setEventEditModal(true);
+          }}
+          icon={<EditOutlined />}
         >
-        <LinkOutlined />  See More
+          Edit Event
+        </Button>,
+        <Button
+          key="see-more"
+          onClick={() => setEventDetailModal(false)}
+          color="default"
+          variant="dashed"
+        >
+          <LinkOutlined /> See More
         </Button>,
         <Button key="close" onClick={() => setEventDetailModal(false)}>
           Close
@@ -639,8 +953,10 @@ export default function Calendar() {
             <strong>Title:</strong> {selectedEvent.title}
           </div>
 
-           <div>
-            <strong>User :</strong> {userEvents.find((user) => user.key === selectedEvent.key)?.title || "All Users"}
+          <div>
+            <strong>User :</strong>{" "}
+            {userEvents.find((user) => user.key === selectedEvent.key)?.title ||
+              "All Users"}
           </div>
           <div>
             <strong>Start:</strong>{" "}
@@ -690,14 +1006,32 @@ export default function Calendar() {
               )}
             </div>
           </div>
-        
         </Space>
       )}
     </Modal>
   );
 
+
+   const [api, contextHolder] = notification.useNotification();
+
+  const openNotification = () => {
+    api.open({
+      message: 'Saved Successfully',
+
+      icon: (
+        <>
+        
+          <CheckCircleOutlined style={{ color: '#52c41a', marginLeft: 8 }} />
+        </>
+      ),
+    });
+  };
+
+
   return (
     <div>
+       {contextHolder}
+      {EditEventModal}
       {EventDetailModal}
       {/* {ModalConfirm}{" "} */}
       <Row gutter={[16, 16]}>
@@ -892,7 +1226,8 @@ export default function Calendar() {
                       start: info.event.start,
                       end: info.event.end || undefined,
                       id: info.event.id,
-                      color: info.event.backgroundColor || info.event.borderColor,
+                      color:
+                        info.event.backgroundColor || info.event.borderColor,
                       key: info.event.extendedProps.key || "1",
                     });
                     setEventDetailModal(true);
@@ -903,6 +1238,8 @@ export default function Calendar() {
                 eventChange={updateMonthTitles} // runs when event changes
                 eventRemove={updateMonthTitles} // runs when event removed
                 eventReceive={handleEventReceive}
+                eventDrop={handleEventDrop} // Handle event drag and drop
+                eventResize={handleEventResize} // Handle event resize
                 drop={(info) => {
                   // Handle external event drop
                   console.log("Dropped event:", info);
@@ -910,6 +1247,26 @@ export default function Calendar() {
               />
             </div>
           </div>
+
+          <Space style={{ marginTop: 16 }} align="center" wrap>
+            <Button
+              type="primary"
+              onClick={() => {
+                saveEventsToLocalStorage(allEvents);
+                openNotification();
+              }}
+            >
+              Save to Storage
+            </Button>
+            <Button onClick={resetEventsToOriginal} danger>
+              Reset to Original
+            </Button>
+
+            <div style={{ marginLeft: 16, color: "#666" }}>
+              Total Events: {allEvents.length} | Filtered: {eventsList.length} | Saved:{" "}
+              {localStorage.getItem("calendarEvents") ? "Yes" : "No"}
+            </div>
+          </Space>
         </Col>
       </Row>
     </div>
