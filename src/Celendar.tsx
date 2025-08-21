@@ -2,7 +2,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
-import { CheckCircleOutlined   } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
@@ -271,7 +271,7 @@ export default function Calendar() {
 
   // Store the original/full events list separately from filtered view
   const [allEvents, setAllEvents] = useState(() => {
-    const savedEvents = localStorage.getItem('calendarEvents');
+    const savedEvents = localStorage.getItem("calendarEvents");
     if (savedEvents) {
       try {
         const parsedEvents = JSON.parse(savedEvents);
@@ -289,7 +289,7 @@ export default function Calendar() {
           end: event.end ? new Date(event.end) : undefined,
         }));
       } catch (error) {
-        console.error('Error parsing saved events:', error);
+        console.error("Error parsing saved events:", error);
         return events;
       }
     }
@@ -298,18 +298,18 @@ export default function Calendar() {
 
   // Filtered events for display (based on selected user)
   const [eventsList, setEventsList] = useState(() => {
-    const savedEvents = localStorage.getItem('calendarEvents');
+    const savedEvents = localStorage.getItem("calendarEvents");
     if (savedEvents) {
       try {
         const parsedEvents = JSON.parse(savedEvents);
-    
+
         return parsedEvents.map((event: CalendarEvent) => ({
           ...event,
           start: new Date(event.start),
           end: event.end ? new Date(event.end) : undefined,
         }));
       } catch (error) {
-        console.error('Error parsing saved events:', error);
+        console.error("Error parsing saved events:", error);
         return events;
       }
     }
@@ -355,7 +355,6 @@ export default function Calendar() {
     color?: string;
     key?: string;
   } | null>(null);
- 
 
   // Function to save events to localStorage
   const saveEventsToLocalStorage = useCallback((events: typeof allEvents) => {
@@ -378,7 +377,8 @@ export default function Calendar() {
 
   // Save events to localStorage whenever allEvents changes
   useEffect(() => {
-    if (allEvents !== events) { // Only save if events have been modified
+    if (allEvents !== events) {
+      // Only save if events have been modified
       saveEventsToLocalStorage(allEvents);
     }
   }, [allEvents, saveEventsToLocalStorage]);
@@ -435,7 +435,7 @@ export default function Calendar() {
       // Add to events list
       const updatedAllEvents = [...newList, newEvent];
       setAllEvents(updatedAllEvents);
-      
+
       // Update filtered list based on current user selection
       if (selectedUser) {
         const filteredEvents = updatedAllEvents.filter(
@@ -484,7 +484,7 @@ export default function Calendar() {
   // Handle event drag and drop to change dates
   const handleEventDrop = (info: FullCalendarEventInfo) => {
     if (!info.event.start) return;
-    
+
     const updatedEvent: CalendarEvent = {
       id: info.event.id,
       title: info.event.title,
@@ -495,7 +495,7 @@ export default function Calendar() {
     };
 
     // Update allEvents
-    const updatedAllEvents = allEvents.map((event:CalendarEvent) =>
+    const updatedAllEvents = allEvents.map((event: CalendarEvent) =>
       event.id === updatedEvent.id ? updatedEvent : event
     );
     setAllEvents(updatedAllEvents);
@@ -517,7 +517,7 @@ export default function Calendar() {
   // Handle event resize to change duration
   const handleEventResize = (info: FullCalendarEventInfo) => {
     if (!info.event.start) return;
-    
+
     const updatedEvent: CalendarEvent = {
       id: info.event.id,
       title: info.event.title,
@@ -528,13 +528,13 @@ export default function Calendar() {
     };
 
     // Update allEvents
-    const updatedAllEvents = allEvents.map((event:CalendarEvent) =>
+    const updatedAllEvents = allEvents.map((event: CalendarEvent) =>
       event.id === updatedEvent.id ? updatedEvent : event
     );
     setAllEvents(updatedAllEvents);
 
     // Update filtered events
-    setEventsList((prevEvents :CalendarEvent[] ) =>
+    setEventsList((prevEvents: CalendarEvent[]) =>
       prevEvents.map((event) =>
         event.id === updatedEvent.id ? updatedEvent : event
       )
@@ -549,6 +549,85 @@ export default function Calendar() {
       `Event "${info.event.title}" duration changed to ${duration} hours`
     );
   };
+
+  // Handle event removal with confirmation
+  const handleEventRemove = useCallback(
+    (eventId: string) => {
+      // Update allEvents (source of truth)
+      const updatedAllEvents = allEvents.filter(
+        (event: CalendarEvent) => event.id !== eventId
+      );
+      setAllEvents(updatedAllEvents);
+
+      // Update filtered events list
+      setEventsList((prevEvents: CalendarEvent[]) =>
+        prevEvents.filter((event) => event.id !== eventId)
+      );
+
+      // Close modals
+      setEventEditModal(false);
+      setEventDetailModal(false);
+      setSelectedEvent(null);
+
+      // Show success message
+      message.success("Event removed successfully");
+    },
+    [allEvents]
+  );
+
+  // Handle keyboard shortcuts for event operations
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Delete key to remove selected event
+      if (event.key === "Delete" && selectedEvent && eventDetailModal) {
+        event.preventDefault();
+        handleEventRemove(selectedEvent.id);
+      }
+      // Escape key to close modal
+      if (event.key === "Escape" && eventDetailModal) {
+        setEventDetailModal(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [selectedEvent, eventDetailModal, handleEventRemove]);
+
+  // Utility functions for event removal (available for programmatic use)
+  // const removeEventById = useCallback((eventId: string) => {
+  //   const updatedAllEvents = allEvents.filter((event: CalendarEvent) => event.id !== eventId);
+  //   setAllEvents(updatedAllEvents);
+
+  //   setEventsList((prevEvents: CalendarEvent[]) =>
+  //     prevEvents.filter((event) => event.id !== eventId)
+  //   );
+  // }, [allEvents]);
+
+  // const removeEventsByUser = useCallback((userKey: string) => {
+  //   const eventsToRemove = allEvents.filter((event: CalendarEvent) => event.key === userKey);
+  //   if (eventsToRemove.length === 0) {
+  //     message.info("No events found for this user");
+  //     return;
+  //   }
+
+  //   Modal.confirm({
+  //     title: 'Remove All User Events',
+  //     content: `Are you sure you want to remove all ${eventsToRemove.length} events for this user?`,
+  //     okText: 'Yes, Remove All',
+  //     okType: 'danger',
+  //     cancelText: 'Cancel',
+  //     onOk: () => {
+  //       const updatedAllEvents = allEvents.filter((event: CalendarEvent) => event.key !== userKey);
+  //       setAllEvents(updatedAllEvents);
+
+  //       setEventsList((prevEvents: CalendarEvent[]) =>
+  //         prevEvents.filter((event) => event.key !== userKey)
+  //       );
+
+  //       message.success(`Removed ${eventsToRemove.length} events successfully`);
+  //     }
+  //   });
+  // }, [allEvents]);
 
   // Handle manual event editing through form
   interface EventEditFormValues {
@@ -987,6 +1066,18 @@ export default function Calendar() {
         >
           <LinkOutlined /> See More
         </Button>,
+        <Button
+          key="Remove"
+          onClick={() => {
+            if (selectedEvent) {
+              handleEventRemove(selectedEvent.id);
+            }
+          }}
+          color="danger"
+          variant="dashed"
+        >
+          <CloseCircleOutlined /> Remove
+        </Button>,
         <Button key="close" onClick={() => setEventDetailModal(false)}>
           Close
         </Button>,
@@ -1052,31 +1143,90 @@ export default function Calendar() {
               )}
             </div>
           </div>
+
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "8px",
+              background: "#f0f0f0",
+              borderRadius: "4px",
+              fontSize: "12px",
+              color: "#666",
+            }}
+          >
+            <strong>Keyboard Shortcuts:</strong> Delete key to remove event, Esc
+            to close modal
+          </div>
         </Space>
       )}
     </Modal>
   );
 
+  // const RemoveModal = (eventId: string , eventTitle: string) => {
+  //   return (
+  //     <Modal
+  //       title="Remove Event"
+  //       onOk={() => {
+  //         const updatedAllEvents = allEvents.filter(
+  //           (event: CalendarEvent) => event.id !== eventId
+  //         );
+  //         setAllEvents(updatedAllEvents);
 
-   const [api, contextHolder] = notification.useNotification();
+  //         setEventsList((prevEvents: CalendarEvent[]) =>
+  //           prevEvents.filter((event) => event.id !== eventId)
+  //         );
+  //       }}
+  //       onCancel={() => setIsRemoveModalVisible(false)}
+  //       okText="Yes, Remove"
+  //       okType="danger"
+  //       cancelText="Cancel"
+  //     >
+  //       <p>Are you sure you want to remove "{eventTitle}"?</p>
+  //     </Modal>
+  //   );
+  // };
+
+  //   Modal.confirm({
+  //   title: 'Remove Event',
+  //   content: `Are you sure you want to remove "${eventTitle}"?`,
+  //   okText: 'Yes, Remove',
+  //   okType: 'danger',
+  //   cancelText: 'Cancel',
+  //   onOk: () => {
+  //     // Remove from allEvents
+  //     const updatedAllEvents = allEvents.filter((event: CalendarEvent) => event.id !== eventId);
+  //     setAllEvents(updatedAllEvents);
+
+  //     // Remove from filtered events
+  //     setEventsList((prevEvents: CalendarEvent[]) =>
+  //       prevEvents.filter((event) => event.id !== eventId)
+  //     );
+
+  //     // Close modal and clear selected event
+  //     setEventDetailModal(false);
+  //     setSelectedEvent(null);
+
+  //     message.success("Event removed successfully");
+  //   }
+  // });
+
+  const [api, contextHolder] = notification.useNotification();
 
   const openNotification = () => {
     api.open({
-      message: 'Saved Successfully',
+      message: "Saved Successfully",
 
       icon: (
         <>
-        
-          <CheckCircleOutlined style={{ color: '#52c41a', marginLeft: 8 }} />
+          <CheckCircleOutlined style={{ color: "#52c41a", marginLeft: 8 }} />
         </>
       ),
     });
   };
 
-
   return (
     <div>
-       {contextHolder}
+      {contextHolder}
       {EditEventModal}
       {EventDetailModal}
       {/* {ModalConfirm}{" "} */}
@@ -1309,8 +1459,8 @@ export default function Calendar() {
             </Button>
 
             <div style={{ marginLeft: 16, color: "#666" }}>
-              Total Events: {allEvents.length} | Filtered: {eventsList.length} | Saved:{" "}
-              {localStorage.getItem("calendarEvents") ? "Yes" : "No"}
+              Total Events: {allEvents.length} | Filtered: {eventsList.length} |
+              Saved: {localStorage.getItem("calendarEvents") ? "Yes" : "No"}
             </div>
           </Space>
         </Col>
