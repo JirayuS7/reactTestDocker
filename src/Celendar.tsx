@@ -2,7 +2,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
-import { CheckCircleOutlined, SmileOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined   } from '@ant-design/icons';
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
