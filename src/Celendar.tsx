@@ -23,7 +23,36 @@ import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import EventsList from "./EventsList";
 import interactionPlugin from "@fullcalendar/interaction";
-const events = [
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end?: Date;
+  color?: string;
+  key?: string;
+}
+
+interface FullCalendarEventInfo {
+  event: {
+    id: string;
+    title: string;
+    start: Date | null;
+    end: Date | null;
+    backgroundColor?: string;
+    borderColor?: string;
+    extendedProps: {
+      key?: string;
+      timeSlot?: string;
+      startTime?: string;
+      endTime?: string;
+      [key: string]: unknown;
+    };
+    remove: () => void;
+  };
+}
+
+const events: CalendarEvent[] = [
   {
     id: "1",
     title:
@@ -246,7 +275,15 @@ export default function Calendar() {
     if (savedEvents) {
       try {
         const parsedEvents = JSON.parse(savedEvents);
-        return parsedEvents.map((event: any) => ({
+        interface CalendarEvent {
+          id: string;
+          title: string;
+          start: Date | string;
+          end?: Date | string;
+          color?: string;
+          key?: string;
+        }
+        return parsedEvents.map((event: CalendarEvent) => ({
           ...event,
           start: new Date(event.start),
           end: event.end ? new Date(event.end) : undefined,
@@ -265,7 +302,8 @@ export default function Calendar() {
     if (savedEvents) {
       try {
         const parsedEvents = JSON.parse(savedEvents);
-        return parsedEvents.map((event: any) => ({
+    
+        return parsedEvents.map((event: CalendarEvent) => ({
           ...event,
           start: new Date(event.start),
           end: event.end ? new Date(event.end) : undefined,
@@ -353,13 +391,13 @@ export default function Calendar() {
 
   // } ) , []
 
-  const handleEventReceive = (info: any) => {
+  const handleEventReceive = (info: FullCalendarEventInfo) => {
     // Check if the event has time information from the dragged button
     const timeSlot = info.event.extendedProps?.timeSlot;
     const startTime = info.event.extendedProps?.startTime;
     const endTime = info.event.extendedProps?.endTime;
 
-    if (timeSlot && startTime && endTime) {
+    if (timeSlot && startTime && endTime && info.event.start) {
       // Automatically create event with the predefined time
       const eventDate = info.event.start;
       const startDate = new Date(eventDate);
@@ -444,25 +482,26 @@ export default function Calendar() {
   }, [selectedUser, allEvents]);
 
   // Handle event drag and drop to change dates
-  const handleEventDrop = (info: any) => {
-    const updatedEvent = {
-      ...info.event.extendedProps,
+  const handleEventDrop = (info: FullCalendarEventInfo) => {
+    if (!info.event.start) return;
+    
+    const updatedEvent: CalendarEvent = {
       id: info.event.id,
       title: info.event.title,
       start: info.event.start,
-      end: info.event.end,
-      color: info.event.backgroundColor || info.event.borderColor,
+      end: info.event.end || undefined,
+      color: info.event.backgroundColor || info.event.borderColor || "#3788d8",
       key: info.event.extendedProps.key || "1",
     };
 
     // Update allEvents
-    const updatedAllEvents = allEvents.map((event) =>
+    const updatedAllEvents = allEvents.map((event:CalendarEvent) =>
       event.id === updatedEvent.id ? updatedEvent : event
     );
     setAllEvents(updatedAllEvents);
 
     // Update filtered events
-    setEventsList((prevEvents) =>
+    setEventsList((prevEvents: CalendarEvent[]) =>
       prevEvents.map((event) =>
         event.id === updatedEvent.id ? updatedEvent : event
       )
@@ -476,25 +515,26 @@ export default function Calendar() {
   };
 
   // Handle event resize to change duration
-  const handleEventResize = (info: any) => {
-    const updatedEvent = {
-      ...info.event.extendedProps,
+  const handleEventResize = (info: FullCalendarEventInfo) => {
+    if (!info.event.start) return;
+    
+    const updatedEvent: CalendarEvent = {
       id: info.event.id,
       title: info.event.title,
       start: info.event.start,
-      end: info.event.end,
-      color: info.event.backgroundColor || info.event.borderColor,
+      end: info.event.end || undefined,
+      color: info.event.backgroundColor || info.event.borderColor || "#3788d8",
       key: info.event.extendedProps.key || "1",
     };
 
     // Update allEvents
-    const updatedAllEvents = allEvents.map((event) =>
+    const updatedAllEvents = allEvents.map((event:CalendarEvent) =>
       event.id === updatedEvent.id ? updatedEvent : event
     );
     setAllEvents(updatedAllEvents);
 
     // Update filtered events
-    setEventsList((prevEvents) =>
+    setEventsList((prevEvents :CalendarEvent[] ) =>
       prevEvents.map((event) =>
         event.id === updatedEvent.id ? updatedEvent : event
       )
@@ -511,7 +551,13 @@ export default function Calendar() {
   };
 
   // Handle manual event editing through form
-  const handleEventEdit = (values: any) => {
+  interface EventEditFormValues {
+    date: dayjs.Dayjs;
+    startTime: dayjs.Dayjs;
+    endTime?: dayjs.Dayjs;
+    title?: string;
+  }
+  const handleEventEdit = (values: EventEditFormValues) => {
     if (!editingEvent) return;
 
     const startDate = dayjs(values.date)
@@ -535,13 +581,13 @@ export default function Calendar() {
     };
 
     // Update allEvents
-    const updatedAllEvents = allEvents.map((event) =>
+    const updatedAllEvents = allEvents.map((event: CalendarEvent) =>
       event.id === editingEvent.id ? updatedEvent : event
     );
     setAllEvents(updatedAllEvents);
 
     // Update filtered events
-    setEventsList((prevEvents) =>
+    setEventsList((prevEvents: CalendarEvent[]) =>
       prevEvents.map((event) =>
         event.id === editingEvent.id ? updatedEvent : event
       )
