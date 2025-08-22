@@ -21,8 +21,8 @@ import {
 import { LinkOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
-import EventsList from "./EventsList";
 import interactionPlugin from "@fullcalendar/interaction";
+import EventsListRadio from "./EventsListRadio";
 
 interface CalendarEvent {
   id: string;
@@ -473,7 +473,7 @@ export default function Calendar() {
       // Check event limit for the target date
       const targetDate = info.event.start;
       const eventsOnTargetDate = countEventsOnDate(targetDate, allEvents);
-      
+
       if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
         // Show warning modal and prevent event creation
         setLimitWarningInfo({
@@ -481,8 +481,7 @@ export default function Calendar() {
           eventCount: eventsOnTargetDate
         });
         setEventLimitModal(true);
-        
-        // Remove the temporary event that FullCalendar creates
+        // Always remove the temporary event
         info.event.remove();
         return;
       }
@@ -534,21 +533,12 @@ export default function Calendar() {
       } else {
         setEventsList(updatedAllEvents);
       }
-
-      // Extract the original event title to remove from external list
-      // The title format is "EventTitle - Morning" or "EventTitle - Afternoon"
-      // const titleParts = info.event.title.split(' - ');
-      // const originalEventTitle = titleParts[0]; // Get the first part before " - "
-
-      // Remove from external events by matching the original title
-      // setExternalEvents((prevEvents) =>
-      //   prevEvents.filter((event) => event.title !== originalEventTitle)
-      // );
     }
-
-    // Remove the temporary event that FullCalendar creates
+    // Always remove the temporary event that FullCalendar creates
     info.event.remove();
   };
+
+
 
   useEffect(() => {
     if (selectedUser) {
@@ -571,70 +561,70 @@ export default function Calendar() {
   }, [selectedUser, allEvents]);
 
   // Handle event drag and drop to change dates
-  const handleEventDrop = (info: FullCalendarEventInfo) => {
-    if (!info.event.start) return;
+  // const handleEventDrop = (info: FullCalendarEventInfo) => {
+  //   if (!info.event.start) return;
 
-    // Check if moving to a different date
-    const newDate = info.event.start;
-    const oldEvent = allEvents.find((event: CalendarEvent) => event.id === info.event.id);
+  //   // Check if moving to a different date
+  //   const newDate = info.event.start;
+  //   const oldEvent = allEvents.find((event: CalendarEvent) => event.id === info.event.id);
     
-    if (oldEvent) {
-      const oldDateStr = dayjs(oldEvent.start).format('YYYY-MM-DD');
-      const newDateStr = dayjs(newDate).format('YYYY-MM-DD');
+  //   if (oldEvent) {
+  //     const oldDateStr = dayjs(oldEvent.start).format('YYYY-MM-DD');
+  //     const newDateStr = dayjs(newDate).format('YYYY-MM-DD');
       
-      // If moving to a different date, check the event limit
-      if (oldDateStr !== newDateStr) {
-        // Count events on target date (excluding the event being moved)
-        const eventsOnTargetDate = allEvents.filter((event: CalendarEvent) => {
-          const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
-          return eventDateStr === newDateStr && event.id !== info.event.id;
-        }).length;
+  //     // If moving to a different date, check the event limit
+  //     if (oldDateStr !== newDateStr) {
+  //       // Count events on target date (excluding the event being moved)
+  //       const eventsOnTargetDate = allEvents.filter((event: CalendarEvent) => {
+  //         const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
+  //         return eventDateStr === newDateStr && event.id !== info.event.id;
+  //       }).length;
         
-        if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
-          // Show warning modal and revert the move
-          setLimitWarningInfo({
-            date: newDateStr,
-            eventCount: eventsOnTargetDate
-          });
-          setEventLimitModal(true);
+  //       if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
+  //         // Show warning modal and revert the move
+  //         setLimitWarningInfo({
+  //           date: newDateStr,
+  //           eventCount: eventsOnTargetDate
+  //         });
+  //         setEventLimitModal(true);
           
-          // Revert the event to its original position
-          if (info.revert) {
-            info.revert();
-          }
-          return;
-        }
-      }
-    }
+  //         // Revert the event to its original position
+  //         if (info.revert) {
+  //           info.revert();
+  //         }
+  //         return;
+  //       }
+  //     }
+  //   }
 
-    const updatedEvent: CalendarEvent = {
-      id: info.event.id,
-      title: info.event.title,
-      start: info.event.start,
-      end: info.event.end || undefined,
-      color: info.event.backgroundColor || info.event.borderColor || "#3788d8",
-      key: info.event.extendedProps.key || "1",
-    };
+  //   const updatedEvent: CalendarEvent = {
+  //     id: info.event.id,
+  //     title: info.event.title,
+  //     start: info.event.start,
+  //     end: info.event.end || undefined,
+  //     color: info.event.backgroundColor || info.event.borderColor || "#3788d8",
+  //     key: info.event.extendedProps.key || "1",
+  //   };
 
-    // Update allEvents
-    const updatedAllEvents = allEvents.map((event: CalendarEvent) =>
-      event.id === updatedEvent.id ? updatedEvent : event
-    );
-    setAllEvents(updatedAllEvents);
+  //   // Update allEvents
+  //   const updatedAllEvents = allEvents.map((event: CalendarEvent) =>
+  //     event.id === updatedEvent.id ? updatedEvent : event
+  //   );
+  //   setAllEvents(updatedAllEvents);
 
-    // Update filtered events
-    setEventsList((prevEvents: CalendarEvent[]) =>
-      prevEvents.map((event) =>
-        event.id === updatedEvent.id ? updatedEvent : event
-      )
-    );
+  //   // Update filtered events
+  //   setEventsList((prevEvents: CalendarEvent[]) =>
+  //     prevEvents.map((event) =>
+  //       event.id === updatedEvent.id ? updatedEvent : event
+  //     )
+  //   );
 
-    message.success(
-      `Event "${info.event.title}" moved to ${dayjs(info.event.start).format(
-        "YYYY-MM-DD HH:mm"
-      )}`
-    );
-  };
+  //   message.success(
+  //     `Event "${info.event.title}" moved to ${dayjs(info.event.start).format(
+  //       "YYYY-MM-DD HH:mm"
+  //     )}`
+  //   );
+  // };
 
   // Handle event resize to change duration
   const handleEventResize = (info: FullCalendarEventInfo) => {
@@ -721,42 +711,7 @@ export default function Calendar() {
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [selectedEvent, eventDetailModal, handleEventRemove]);
 
-  // Utility functions for event removal (available for programmatic use)
-  // const removeEventById = useCallback((eventId: string) => {
-  //   const updatedAllEvents = allEvents.filter((event: CalendarEvent) => event.id !== eventId);
-  //   setAllEvents(updatedAllEvents);
-
-  //   setEventsList((prevEvents: CalendarEvent[]) =>
-  //     prevEvents.filter((event) => event.id !== eventId)
-  //   );
-  // }, [allEvents]);
-
-  // const removeEventsByUser = useCallback((userKey: string) => {
-  //   const eventsToRemove = allEvents.filter((event: CalendarEvent) => event.key === userKey);
-  //   if (eventsToRemove.length === 0) {
-  //     message.info("No events found for this user");
-  //     return;
-  //   }
-
-  //   Modal.confirm({
-  //     title: 'Remove All User Events',
-  //     content: `Are you sure you want to remove all ${eventsToRemove.length} events for this user?`,
-  //     okText: 'Yes, Remove All',
-  //     okType: 'danger',
-  //     cancelText: 'Cancel',
-  //     onOk: () => {
-  //       const updatedAllEvents = allEvents.filter((event: CalendarEvent) => event.key !== userKey);
-  //       setAllEvents(updatedAllEvents);
-
-  //       setEventsList((prevEvents: CalendarEvent[]) =>
-  //         prevEvents.filter((event) => event.key !== userKey)
-  //       );
-
-  //       message.success(`Removed ${eventsToRemove.length} events successfully`);
-  //     }
-  //   });
-  // }, [allEvents]);
-
+ 
   // Handle manual event editing through form
   interface EventEditFormValues {
     date: dayjs.Dayjs;
@@ -933,162 +888,7 @@ export default function Calendar() {
       calendarApi.changeView("dayGridMonth", date);
     }
   };
-
-  // Function to get the color of events for a specific date
-
-  // Function to customize more links after calendar render
-  // const customizeMoreLinks = () => {
-  //   if (currentView !== "multiMonthYear") return;
-
-  //   setTimeout(() => {
-  //     const moreLinks = document.querySelectorAll(
-  //       ".fc-multimonth .fc-more-link"
-  //     );
-
-  //     moreLinks.forEach((link) => {
-  //       const linkElement = link as HTMLElement;
-  //       const text = linkElement.textContent || "";
-  //       const match = text.match(/\+ (\d+) more/);
-
-  //       if (match) {
-  //         const count = parseInt(match[1]);
-
-  //         // Get the date from the parent day cell
-  //         const dayCell = linkElement.closest(".fc-daygrid-day");
-  //         if (!dayCell) return;
-
-  //         const dateStr = dayCell.getAttribute("data-date");
-  //         if (!dateStr) return;
-
-  //         // const date = new Date(dateStr + "T00:00:00");
-  //         // const eventColor = getEventColorForDate(date);
-
-  //         if (count === 1) {
-  //           // Single event: show just a colored dot
-  //           // linkElement.innerHTML = `<span class="custom-single-event-dot" style="background-color: ${eventColor}"></span>`;
-  //           linkElement.innerHTML = `   <span class="custom-more-events">
-
-  //               <span class="custom-more-text">+ ${count} more</span>
-  //             </span>`;
-  //         } else {
-  //           // Multiple events: show dot with text
-  //           linkElement.innerHTML = `
-  //             <span class="custom-more-events">
-
-  //               <span class="custom-more-text">+ ${count} more</span>
-  //             </span>
-  //           `;
-  //         }
-  //       }
-  //     });
-  //   }, 200);
-  // };
-
-  //  confirm drop
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // const showModal = () => {
-  //   setIsModalOpen(true);
-  // };
-
-  // const handleOk = () => {
-  //   setIsModalOpen(false);
-  // };
-
-  // const handleCancel = () => {
-  //   setIsModalOpen(false);
-  // };
-
-  // const [form] = Form.useForm();
-  // const [formLayout, setFormLayout] = useState<LayoutType>("horizontal");
-
-  // const onFormLayoutChange = ({ layout }: { layout: LayoutType }) => {
-  //   setFormLayout(layout);
-  // };
-
-  // const ModalConfirm = (
-  //   <Modal
-  //     title={`Select Event Duration  at ${
-  //       dayjs(droppedEventInfo?.dateStr).format("YYYY-MM-DD") || "-"
-  //     }`}
-  //     closable={{ "aria-label": "Custom Close Button" }}
-  //     open={isModalOpen}
-  //     footer={null}
-  //     centered
-  //     onCancel={handleCancel}
-  //   >
-  //     <Form
-  //       layout={formLayout}
-  //       form={form}
-  //       initialValues={{ layout: formLayout }}
-  //       onValuesChange={onFormLayoutChange}
-  //       style={{ maxWidth: formLayout === "inline" ? "none" : 600 }}
-  //     >
-  //       <Form.Item name="layout">
-  //         <Space direction="vertical" style={{ width: "100%" }}>
-  //           <Button
-  //             color="cyan"
-  //             variant="solid"
-  //             onClick={() => handleTimeSelection(6, 12)}
-  //           >
-  //             Morning Time : 06:00 - 12:00
-  //           </Button>
-  //           <Button
-  //             color="primary"
-  //             variant="solid"
-  //             onClick={() => handleTimeSelection(12, 18)}
-  //           >
-  //             Afternoon Time : 12:00 - 18:00
-  //           </Button>
-  //         </Space>
-  //       </Form.Item>
-  //     </Form>
-  //   </Modal>
-  // );
-
-  //  tool tip
-
-  // Copy from FullCalendar source for default inner structure
-  // function renderInnerContent(innerProps: any) {
-
-  //   const limitText = 20;
-  //   const eventTitle = innerProps.event.title || "\u00A0";
-  //   const displayedTitle =
-  //     eventTitle.length > limitText
-  //       ? eventTitle.slice(0, limitText) + "..."
-  //       : eventTitle;
-
-  //   if (currentView === "dayGridMonth") {
-  //     // Custom rendering for multiMonthYear view
-
-  //     return (
-  //       <div className="fc-event-main-frame">
-  //         {innerProps.timeText && (
-  //           <div className="fc-event-time">
-  //             {" "}
-  //             <span
-  //               style={{
-  //                 width: "8px",
-  //                 height: "8px",
-  //                 display: "inline-block",
-  //                 backgroundColor: innerProps.event.backgroundColor,
-  //               }}
-  //             >
-  //               {" "}
-  //             </span>{" "}
-  //             {innerProps.timeText} : {displayedTitle}
-  //           </div>
-  //         )}
-  //         {/* <div className="fc-event-title-container">
-  //           <div className="fc-event-title fc-sticky">{displayedTitle}</div>
-  //         </div> */}
-  //       </div>
-  //     );
-  //   }
-  // }
-  // const renderEventWithTooltip = (arg: any) => {
-  //   return renderInnerContent(arg);
-  // };
+ 
 
   const EventLimitModal = (
     <Modal
@@ -1345,54 +1145,7 @@ export default function Calendar() {
       )}
     </Modal>
   );
-
-  // const RemoveModal = (eventId: string , eventTitle: string) => {
-  //   return (
-  //     <Modal
-  //       title="Remove Event"
-  //       onOk={() => {
-  //         const updatedAllEvents = allEvents.filter(
-  //           (event: CalendarEvent) => event.id !== eventId
-  //         );
-  //         setAllEvents(updatedAllEvents);
-
-  //         setEventsList((prevEvents: CalendarEvent[]) =>
-  //           prevEvents.filter((event) => event.id !== eventId)
-  //         );
-  //       }}
-  //       onCancel={() => setIsRemoveModalVisible(false)}
-  //       okText="Yes, Remove"
-  //       okType="danger"
-  //       cancelText="Cancel"
-  //     >
-  //       <p>Are you sure you want to remove "{eventTitle}"?</p>
-  //     </Modal>
-  //   );
-  // };
-
-  //   Modal.confirm({
-  //   title: 'Remove Event',
-  //   content: `Are you sure you want to remove "${eventTitle}"?`,
-  //   okText: 'Yes, Remove',
-  //   okType: 'danger',
-  //   cancelText: 'Cancel',
-  //   onOk: () => {
-  //     // Remove from allEvents
-  //     const updatedAllEvents = allEvents.filter((event: CalendarEvent) => event.id !== eventId);
-  //     setAllEvents(updatedAllEvents);
-
-  //     // Remove from filtered events
-  //     setEventsList((prevEvents: CalendarEvent[]) =>
-  //       prevEvents.filter((event) => event.id !== eventId)
-  //     );
-
-  //     // Close modal and clear selected event
-  //     setEventDetailModal(false);
-  //     setSelectedEvent(null);
-
-  //     message.success("Event removed successfully");
-  //   }
-  // });
+ 
 
   const [api, contextHolder] = notification.useNotification();
 
@@ -1417,10 +1170,12 @@ export default function Calendar() {
       {/* {ModalConfirm}{" "} */}
       <Row gutter={[16, 16]}>
         <Col span={6}>
-          <EventsList
+          <EventsListRadio
             events={userEvents}
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
+            eventsList={eventsList}
+            setEventsList={setEventsList}
           />
           {/* <UserLists /> */}
         </Col>
@@ -1620,7 +1375,7 @@ export default function Calendar() {
                 eventChange={updateMonthTitles} // runs when event changes
                 eventRemove={updateMonthTitles} // runs when event removed
                 eventReceive={handleEventReceive}
-                eventDrop={handleEventDrop} // Handle event drag and drop
+                // eventDrop={handleEventDrop} // Handle event drag and drop
                 eventResize={handleEventResize} // Handle event resize
                 drop={(info) => {
                   // Handle external event drop
