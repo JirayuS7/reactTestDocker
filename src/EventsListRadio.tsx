@@ -1,12 +1,4 @@
-import {
-  Button,
-  Card,
-  ConfigProvider,
-  Space,
-  Modal,
-  DatePicker,
-  message,
-} from "antd";
+import { Button, Card, ConfigProvider, Space, Modal, DatePicker } from "antd";
 import type { Dayjs } from "dayjs";
 import {
   CheckSquareOutlined,
@@ -16,13 +8,15 @@ import {
 import { useRef, useState } from "react";
 import { createStyles } from "antd-style";
 import type { Dispatch, SetStateAction } from "react";
-import dayjs from "dayjs";
-interface EventItem {
+import { checkLimitEvent } from "./services/checkLimitEvent";
+export interface EventItem {
   key: string;
   title: string;
   timeSlot?: string; // 'morning' or 'afternoon'
   start?: Date;
   end?: Date;
+  userId: number;
+  color?: string;
 }
 const useStyle = createStyles(({ prefixCls, css }) => ({
   linearGradientButton: css`
@@ -50,23 +44,27 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
   `,
 }));
 
-
 export default function EventsListRadio({
   events,
   selectedUser,
   setSelectedUser,
   eventsList,
   setEventsList,
+  limitModalOpen,
+  setLimitModalOpen,
+  onNavigateToDate,
 }: {
   events: EventItem[];
-  selectedUser: string | null;
-  setSelectedUser: (user: string | null) => void;
+  selectedUser: number | null;
+  setSelectedUser: (user: number | null) => void;
   eventsList: EventItem[];
   setEventsList: (events: EventItem[]) => void;
+  limitModalOpen: boolean;
+  setLimitModalOpen: (open: boolean) => void;
+  onNavigateToDate?: (date: Date) => void;
 }) {
   // Modal state for event limit warning
-  const [limitModalOpen, setLimitModalOpen] = useState(false);
-  // const [limitModalDate, setLimitModalDate] = useState<Date | null>(null);
+
   const containerRef = useRef(null);
 
   //  form
@@ -85,35 +83,19 @@ export default function EventsListRadio({
 
   function handleModalSubmit() {
     // Check event limit for each date in the range
-    const eventLimit = 7;
+
     const eventSource = [...eventsList, ...selectedEvent];
 
     if (dateRange[0] && dateRange[1]) {
-      const startDate = dayjs(dateRange[0]);
-      const endDate = dayjs(dateRange[1]);
+      const check = checkLimitEvent({
+        dateRange,
+        selectedEvent,
+        eventSource,
+        setLimitModalOpen,
+      });
 
-      // For each selected event, check if adding it would exceed the limit for that user (key) on the same day
-      for (let i = 0; i < selectedEvent.length; i++) {
-        const event = selectedEvent[i];
-        const eventKey = event.key;
-        // Check for each day in the range
-        let currentDate = startDate.clone();
-        while (currentDate.isBefore(endDate, 'day') || currentDate.isSame(endDate, 'day')) {
-          // Count events for this key on this day
-          const eventCount = eventSource.filter(
-            (e) => e.key === eventKey && dayjs(e.start).isSame(currentDate, 'day')
-          ).length;
-          if (eventCount >= eventLimit) {
-            setLimitModalOpen(true);
-            message.error(
-              `Cannot add event for user ${eventKey} on ${currentDate.format(
-                "YYYY-MM-DD"
-              )}: Maximum of ${eventLimit} events allowed per user per day.`
-            );
-            return;
-          }
-          currentDate = currentDate.add(1, 'day');
-        }
+      if (check) {
+        return;
       }
     }
 
@@ -123,12 +105,18 @@ export default function EventsListRadio({
       ...oldData,
       ...selectedEvent.map((event) => ({
         ...event,
+        title: `Monthly meeting (${event.timeSlot})`,
         start: dateRange[0]?.toDate(),
         end: dateRange[1]?.toDate(),
       })),
     ];
     setEventsList(newEvents);
     localStorage.setItem("calendarEvents", JSON.stringify(newEvents));
+
+    // Navigate calendar to the selected date if provided
+    if (onNavigateToDate && dateRange[0]) {
+      onNavigateToDate(dateRange[0].toDate());
+    }
 
     setIsModalOpen(false);
     setDateRange([null, null]);
@@ -244,23 +232,23 @@ export default function EventsListRadio({
 
 function eventCard(
   event: EventItem,
-  selectedUser: string | null,
-  setSelectedUser: (user: string | null) => void,
+  selectedUser: number | null,
+  setSelectedUser: (user: number | null) => void,
   setSelectedEvent: Dispatch<SetStateAction<EventItem[]>>,
   selectedEvent: EventItem[]
 ) {
-  const active = selectedUser === event.key;
+  const active = selectedUser === event.userId;
 
   return (
     <Card
       key={event.key}
-      className={` ${selectedUser === event.key ? "selectedCard" : ""}`}
+      className={` ${selectedUser === event.userId ? "selectedCard" : ""}`}
       size="small"
     >
       <div>
         {" "}
         <h3
-          onClick={() => setSelectedUser(event.key)}
+          onClick={() => setSelectedUser(event.userId)}
           style={{
             margin: "5px 0 15px 0",
             cursor: "pointer",

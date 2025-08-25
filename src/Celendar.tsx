@@ -28,6 +28,7 @@ import "./Calendar.css"; // Import the CSS file
 import interactionPlugin from "@fullcalendar/interaction";
 import EventsListRadio from "./EventsListRadio";
 import { events } from "./eventsMokup";
+import { checkLimitEvent } from "./services/checkLimitEvent";
 
 export interface CalendarEvent {
   id: string;
@@ -35,6 +36,7 @@ export interface CalendarEvent {
   start: Date;
   end?: Date;
   color?: string;
+  userId: number;
   key?: string;
 }
 
@@ -74,7 +76,7 @@ export default function Calendar() {
     date: string;
     eventCount: number;
   } | null>(null);
-
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
   // Maximum events allowed per date
   const MAX_EVENTS_PER_DATE = 7;
 
@@ -197,24 +199,27 @@ export default function Calendar() {
   const [userEvents] = useState([
     {
       key: "1",
+      userId: 1,
       title: "Alex bot Brown",
     },
     {
       key: "2",
+      userId: 2,
       title: "Samantha Brown",
     },
     {
       key: "3",
+      userId: 3,
       title: "Desmond Brown",
     },
-
     {
       key: "4",
+      userId: 4,
       title: "Charlie Brown",
     },
   ]);
 
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [eventDetailModal, setEventDetailModal] = useState(false);
   const [eventEditModal, setEventEditModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<{
@@ -224,6 +229,7 @@ export default function Calendar() {
     id: string;
     color?: string;
     key?: string;
+    userId?: number;
   } | null>(null);
   const [editingEvent, setEditingEvent] = useState<{
     title: string;
@@ -232,6 +238,7 @@ export default function Calendar() {
     id: string;
     color?: string;
     key?: string;
+    userId?: number;
   } | null>(null);
 
   // Function to save events to localStorage
@@ -261,19 +268,28 @@ export default function Calendar() {
     }
   }, [allEvents, saveEventsToLocalStorage]);
 
-  // const [droppedEventInfo, setDroppedEventInfo] = useState<any>(null);
-
-  // useEffect (() => {
-
-  //   setEventsList (events)
-
-  // } ) , []
-
   const handleEventReceive = (info: FullCalendarEventInfo) => {
+    console.log("🚀 ~ handleEventReceive ~ info:", info);
     // Check if the event has time information from the dragged button
     const timeSlot = info.event.extendedProps?.timeSlot;
     const startTime = info.event.extendedProps?.startTime;
     const endTime = info.event.extendedProps?.endTime;
+
+    checkLimitEvent({
+      dateRange: [dayjs(info.event.start), dayjs(info.event.end)],
+      selectedEvent: [
+        {
+          key: info.event.id,
+          title: info.event.title,
+          start: info.event.start as Date,
+          end: info.event.end as Date,
+          // color: info.event.color,
+          userId: Number(info.event.extendedProps?.userId),
+        },
+      ],
+      eventSource: allEvents,
+      setLimitModalOpen: setEventLimitModal,
+    });
 
     if (timeSlot && startTime && endTime && info.event.start) {
       // Check event limit for the target date
@@ -310,7 +326,7 @@ export default function Calendar() {
         start: startDate,
         end: endDate,
         color: color,
-        key: "1", // Default key for dropped events
+        userId: 1, // Default userId for dropped events
       };
 
       // check Duplicate
@@ -321,6 +337,7 @@ export default function Calendar() {
         end?: Date;
         color?: string;
         key?: string;
+        userId: number;
       }
 
       const newList: CalendarEvent[] = allEvents.filter(
@@ -333,11 +350,25 @@ export default function Calendar() {
       // Update filtered list based on current user selection
       if (selectedUser) {
         const filteredEvents = updatedAllEvents.filter(
-          (event) => event.key === selectedUser
+          (event) => event.userId === selectedUser
         );
         setEventsList(filteredEvents);
       } else {
         setEventsList(updatedAllEvents);
+      }
+
+      // Switch calendar to the month of the newly added event if not already in view
+      if (calendarRef.current && newEvent.start) {
+        const calendarApi = calendarRef.current.getApi();
+        const newEventMonth = newEvent.start.getMonth();
+        const newEventYear = newEvent.start.getFullYear();
+        const currentDate = calendarApi.getDate();
+        if (
+          currentDate.getMonth() !== newEventMonth ||
+          currentDate.getFullYear() !== newEventYear
+        ) {
+          calendarApi.changeView("dayGridMonth", newEvent.start);
+        }
       }
     }
     // Always remove the temporary event that FullCalendar creates
@@ -353,82 +384,17 @@ export default function Calendar() {
         end?: Date;
         color?: string;
         key?: string;
+        userId: number;
       }
 
       const selectedUserEvents: CalendarEvent[] = allEvents.filter(
-        (item: CalendarEvent) => item.key === selectedUser
+        (item: CalendarEvent) => item.userId === selectedUser
       );
       setEventsList(selectedUserEvents);
     } else {
       setEventsList(allEvents);
     }
   }, [selectedUser, allEvents]);
-
-  // Handle event drag and drop to change dates
-  // const handleEventDrop = (info: FullCalendarEventInfo) => {
-  //   if (!info.event.start) return;
-
-  //   // Check if moving to a different date
-  //   const newDate = info.event.start;
-  //   const oldEvent = allEvents.find((event: CalendarEvent) => event.id === info.event.id);
-
-  //   if (oldEvent) {
-  //     const oldDateStr = dayjs(oldEvent.start).format('YYYY-MM-DD');
-  //     const newDateStr = dayjs(newDate).format('YYYY-MM-DD');
-
-  //     // If moving to a different date, check the event limit
-  //     if (oldDateStr !== newDateStr) {
-  //       // Count events on target date (excluding the event being moved)
-  //       const eventsOnTargetDate = allEvents.filter((event: CalendarEvent) => {
-  //         const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
-  //         return eventDateStr === newDateStr && event.id !== info.event.id;
-  //       }).length;
-
-  //       if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
-  //         // Show warning modal and revert the move
-  //         setLimitWarningInfo({
-  //           date: newDateStr,
-  //           eventCount: eventsOnTargetDate
-  //         });
-  //         setEventLimitModal(true);
-
-  //         // Revert the event to its original position
-  //         if (info.revert) {
-  //           info.revert();
-  //         }
-  //         return;
-  //       }
-  //     }
-  //   }
-
-  //   const updatedEvent: CalendarEvent = {
-  //     id: info.event.id,
-  //     title: info.event.title,
-  //     start: info.event.start,
-  //     end: info.event.end || undefined,
-  //     color: info.event.backgroundColor || info.event.borderColor || "#3788d8",
-  //     key: info.event.extendedProps.key || "1",
-  //   };
-
-  //   // Update allEvents
-  //   const updatedAllEvents = allEvents.map((event: CalendarEvent) =>
-  //     event.id === updatedEvent.id ? updatedEvent : event
-  //   );
-  //   setAllEvents(updatedAllEvents);
-
-  //   // Update filtered events
-  //   setEventsList((prevEvents: CalendarEvent[]) =>
-  //     prevEvents.map((event) =>
-  //       event.id === updatedEvent.id ? updatedEvent : event
-  //     )
-  //   );
-
-  //   message.success(
-  //     `Event "${info.event.title}" moved to ${dayjs(info.event.start).format(
-  //       "YYYY-MM-DD HH:mm"
-  //     )}`
-  //   );
-  // };
 
   // Handle event resize to change duration
   const handleEventResize = (info: FullCalendarEventInfo) => {
@@ -443,7 +409,10 @@ export default function Calendar() {
       start: info.event.start,
       end: info.event.end || undefined,
       color: info.event.backgroundColor || info.event.borderColor || "#3788d8",
-      key: info.event.extendedProps.key || "1",
+      userId:
+        typeof info.event.extendedProps.userId === "number"
+          ? info.event.extendedProps.userId
+          : 1,
     };
 
     // Update allEvents
@@ -527,7 +496,7 @@ export default function Calendar() {
       .hour(dayjs(values.startTime).hour())
       .minute(dayjs(values.startTime).minute())
       .toDate();
-      
+
     const endDate = values.endTime
       ? dayjs(values.date)
           .hour(dayjs(values.endTime).hour())
@@ -541,7 +510,7 @@ export default function Calendar() {
       start: startDate,
       end: endDate,
       color: editingEvent.color || "#3788d8",
-      key: editingEvent.key || "1",
+      userId: editingEvent.userId || 1,
     };
 
     // Update allEvents
@@ -674,6 +643,8 @@ export default function Calendar() {
       titleEl.appendChild(link);
     });
   };
+  console.log("🚀 ~ updateMonthTitles ~ updateMonthTitles:", updateMonthTitles);
+  console.log("🚀 ~ updateMonthTitles ~ updateMonthTitles:", updateMonthTitles);
 
   const updateToolTip = () => {
     // change tool tip
@@ -905,8 +876,8 @@ export default function Calendar() {
 
           <div>
             <strong>User :</strong>{" "}
-            {userEvents.find((user) => user.key === selectedEvent.key)?.title ||
-              "All Users"}
+            {userEvents.find((user) => user.userId === selectedEvent.userId)
+              ?.title || "All Users"}
           </div>
           <div>
             <strong>Start:</strong>{" "}
@@ -1011,6 +982,9 @@ export default function Calendar() {
             setSelectedUser={setSelectedUser}
             eventsList={eventsList}
             setEventsList={setEventsList}
+            limitModalOpen={limitModalOpen}
+            setLimitModalOpen={setLimitModalOpen}
+            onNavigateToDate={handleDateClick}
           />
           {/* <UserLists /> */}
         </Col>
@@ -1197,6 +1171,7 @@ export default function Calendar() {
                       title: info.event.title,
                       start: info.event.start,
                       end: info.event.end || undefined,
+                      userId: info.event.extendedProps.userId || 0,
                       id: info.event.id,
                       color:
                         info.event.backgroundColor || info.event.borderColor,
@@ -1207,7 +1182,34 @@ export default function Calendar() {
                 }}
                 datesSet={updateMonthTitles} // runs on view change
                 eventAdd={updateMonthTitles} // runs when new event is added
-                eventChange={updateMonthTitles} // runs when event changes
+                eventChange={( ) => {
+                  // const dateRange: [dayjs.Dayjs, dayjs.Dayjs] = [
+                  //   dayjs(info.event.start),
+                  //   dayjs(info.event.end),
+                  // ];
+
+                  // const eventSource = calendarRef.current
+                  //   ?.getApi()
+                  //   .getEventById(info.event.id);
+                  // console.log("🚀 ~ eventSource:", eventSource)
+
+                  // const selectedEvent = {
+                  //   title: info.event.title,
+                  //   start: info.event.start,
+                  //   end: info.event.end || undefined,
+                  //   userId: info.event.extendedProps.userId || 0,
+                  //   id: info.event.id,
+                  //   color: info.event.backgroundColor || info.event.borderColor,
+                  //   key: info.event.extendedProps.key || "1",
+                  // };
+
+                  // checkLimitEvent({
+                  //   dateRange,
+                  //   selectedEvent,
+                  //   eventSource,
+                  //   setLimitModalOpen,
+                  // });
+                }} // runs when event changes
                 eventRemove={updateMonthTitles} // runs when event removed
                 eventReceive={handleEventReceive}
                 // eventDrop={handleEventDrop} // Handle event drag and drop
