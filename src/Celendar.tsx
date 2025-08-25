@@ -2,7 +2,11 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import multiMonthPlugin from "@fullcalendar/multimonth";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
-import { CheckCircleOutlined, CloseCircleOutlined, WarningOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
 // import interactionPlugin from "@fullcalendar/interaction";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
@@ -23,8 +27,9 @@ import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import interactionPlugin from "@fullcalendar/interaction";
 import EventsListRadio from "./EventsListRadio";
+import { events } from "./eventsMokup";
 
-interface CalendarEvent {
+export interface CalendarEvent {
   id: string;
   title: string;
   start: Date;
@@ -59,217 +64,6 @@ interface DayCellContentArg {
   isOther: boolean;
 }
 
-const events: CalendarEvent[] = [
-  {
-    id: "1",
-    title:
-      "Team Meeting Now when you're in the Year view and click on any month name  ",
-    start: new Date(), // Today
-    end: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
-    color: "#FFA500",
-    key: "1",
-  },
-  {
-    id: "2b",
-    title:
-      "Client Call  it will navigate to that month's detailed view. The navigation uses your existing",
-    start: new Date(), // Today - another event same day
-    color: "#FFA500",
-    key: "1",
-  },
-  {
-    id: "extra1",
-    title: "Morning Standup",
-    start: new Date(), // Today
-    color: "#3788d8",
-    key: "2",
-  },
-  {
-    id: "extra2",
-    title: "Project Review",
-    start: new Date(), // Today
-    color: "#48bb78",
-    key: "2",
-  },
-  {
-    id: "extra3",
-    title: "Design Session",
-    start: new Date(), // Today
-    color: "#f56565",
-    key: "2",
-  },
-  {
-    id: "extra4",
-    title: "Code Review",
-    start: new Date(), // Today
-    color: "#ed8936",
-    key: "2",
-  },
-  {
-    id: "extra5",
-    title: "Team Lunch",
-    start: new Date(), // Today
-    color: "#9f7aea",
-    key: "2",
-  },
-  {
-    id: "extra6",
-    title: "Sprint Planning",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "3",
-  },
-  {
-    id: "extra7",
-    title: "Sprint Planning 2",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "3",
-  },
-  {
-    id: "extra8",
-    title: "Sprint Planning 8",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "3",
-  },
-  {
-    id: "extra9",
-    title: "Sprint Planning 9",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "3",
-  },
-  {
-    id: "extra10",
-    title: "Sprint Planning 10",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "3",
-  },
-  {
-    id: "extra11",
-    title: "Sprint Planning 11",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "3",
-  },
-  {
-    id: "extra12",
-    title: "Sprint Planning 12",
-    start: new Date(), // Today
-    color: "#38b2ac",
-    key: "4",
-  },
-  {
-    id: "extra7",
-    title: "Client Demo",
-    start: dayjs("2025-08-15 08:00").toDate(),
-    end: dayjs("2025-08-15 09:00").toDate(),
-    color: "#d69e2e",
-    key: "4",
-  },
-  {
-    id: "extra8",
-    title: "Bug Triage",
-    start: dayjs("2025-08-15 09:00").toDate(),
-    end: dayjs("2025-08-15 10:00").toDate(),
-    color: "#e53e3e",
-    key: "4",
-  },
-
-  {
-    id: "3",
-    title: "Code Review",
-    start: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // Tomorrow
-    end: new Date(new Date().getTime() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000), // 1 hour
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "4",
-    title: "Weekly Planning",
-    start: new Date(new Date().setDate(new Date().getDate() + 2)), // Day after tomorrow
-    end: new Date(
-      new Date().setDate(new Date().getDate() + 2) + 90 * 60 * 1000
-    ), // 1.5 hours
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "4b",
-    title: "Design Review",
-    start: new Date(new Date().setDate(new Date().getDate() + 2)), // Day after tomorrow - same day
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "5",
-    title: "Meeting 1",
-    start: dayjs("2025-08-11 15:00").toDate(),
-    end: dayjs("2025-08-11 16:00").toDate(),
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "6",
-    title: "Meeting 2",
-    start: dayjs("2025-08-11 14:00").toDate(),
-    end: dayjs("2025-08-11 13:00").toDate(),
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "7",
-    title: "Meeting 3",
-    start: dayjs("2025-08-11 13:00").toDate(),
-    end: dayjs("2025-08-11 14:00").toDate(),
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "8",
-    title: "Meeting 4",
-    start: dayjs("2025-08-11 16:00").toDate(),
-    end: dayjs("2025-08-11 16:30").toDate(),
-    color: "#FFA500",
-    key: "4",
-  },
-  {
-    id: "9",
-    title: "Meeting 5",
-    start: dayjs("2025-08-11 16:30").toDate(),
-    end: dayjs("2025-08-11 17:00").toDate(),
-    color: "#FFA500",
-    key: "3",
-  },
-
-  {
-    id: "10",
-    title: "Meeting 1",
-    start: dayjs("2025-08-11 8:30").toDate(),
-    end: dayjs("2025-08-11 9:00").toDate(),
-    color: "blue",
-    key: "3",
-  },
-  {
-    id: "11",
-    title: "Meeting 2",
-    start: dayjs("2025-08-11 9.00").toDate(),
-    end: dayjs("2025-08-11 11:00").toDate(),
-    color: "blue",
-    key: "3",
-  },
-  {
-    id: "12",
-    title: "Meeting 3 xsss weeee  eweewwe www",
-    start: dayjs("2025-08-11 11.00").toDate(),
-    end: dayjs("2025-08-11 11:15").toDate(),
-    color: "blue",
-    key: "3",
-  },
-];
-
 export default function Calendar() {
   const calendarRef = useRef<FullCalendar>(null);
 
@@ -285,55 +79,67 @@ export default function Calendar() {
   const MAX_EVENTS_PER_DATE = 7;
 
   // Helper function to count events on a specific date
-  const countEventsOnDate = useCallback((targetDate: Date, eventsList: CalendarEvent[]) => {
-    const targetDateStr = dayjs(targetDate).format('YYYY-MM-DD');
-    return eventsList.filter(event => {
-      const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
-      return eventDateStr === targetDateStr;
-    }).length;
-  }, []);
+  const countEventsOnDate = useCallback(
+    (targetDate: Date, eventsList: CalendarEvent[]) => {
+      const targetDateStr = dayjs(targetDate).format("YYYY-MM-DD");
+      return eventsList.filter((event) => {
+        const eventDateStr = dayjs(event.start).format("YYYY-MM-DD");
+        return eventDateStr === targetDateStr;
+      }).length;
+    },
+    []
+  );
 
   // Custom day cell content to show event count and warnings
   const renderDayCellContent = (dayInfo: DayCellContentArg) => {
     const date = dayInfo.date;
     const dayNumber = dayInfo.dayNumberText;
     const eventsCount = countEventsOnDate(date, allEvents);
-    
-    let backgroundColor = '';
-    let textColor = '';
+
+    let backgroundColor = "";
+    let textColor = "";
     let warningIcon = null;
-    
+
     if (eventsCount >= MAX_EVENTS_PER_DATE) {
-      backgroundColor = '#fff2f0';
-      textColor = '#ff4d4f';
-      warningIcon = <CloseCircleOutlined style={{ fontSize: '10px', marginLeft: '2px' }} />;
+      // backgroundColor = "#fff2f0";
+      // textColor = "#ff4d4f";
+      // warningIcon = (
+      //   <CloseCircleOutlined style={{ fontSize: "10px", marginLeft: "2px" }} />
+      // );
     } else if (eventsCount >= MAX_EVENTS_PER_DATE - 2) {
-      backgroundColor = '#fff7e6';
-      textColor = '#fa8c16';
-      warningIcon = <WarningOutlined style={{ fontSize: '10px', marginLeft: '2px' }} />;
+      backgroundColor = "#fff7e6";
+      textColor = "#fa8c16";
+      warningIcon = (
+        <WarningOutlined style={{ fontSize: "10px", marginLeft: "2px" }} />
+      );
     }
-    
+
     return (
-      <div style={{ 
-        backgroundColor, 
-        color: textColor, 
-        padding: '2px 4px',
-        borderRadius: '3px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '12px',
-        
-        fontWeight: eventsCount >= MAX_EVENTS_PER_DATE - 2 ? 'bold' : 'normal'
-      }}>
+      <div
+        style={{
+          backgroundColor,
+          color: textColor,
+          padding: "2px 4px",
+          borderRadius: "3px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "12px",
+
+          fontWeight:
+            eventsCount >= MAX_EVENTS_PER_DATE - 2 ? "bold" : "normal",
+        }}
+      >
         {dayNumber}
         {warningIcon}
         {eventsCount > 0 && (
-          <span  style={{ 
-            fontSize: '8px', 
-            marginLeft: '2px',
-            opacity: 0.7
-          }}>
+          <span
+            style={{
+              fontSize: "8px",
+              marginLeft: "2px",
+              opacity: 0.7,
+            }}
+          >
             ({eventsCount})
           </span>
         )}
@@ -477,8 +283,8 @@ export default function Calendar() {
       if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
         // Show warning modal and prevent event creation
         setLimitWarningInfo({
-          date: dayjs(targetDate).format('YYYY-MM-DD'),
-          eventCount: eventsOnTargetDate
+          date: dayjs(targetDate).format("YYYY-MM-DD"),
+          eventCount: eventsOnTargetDate,
         });
         setEventLimitModal(true);
         // Always remove the temporary event
@@ -538,8 +344,6 @@ export default function Calendar() {
     info.event.remove();
   };
 
-
-
   useEffect(() => {
     if (selectedUser) {
       interface CalendarEvent {
@@ -567,11 +371,11 @@ export default function Calendar() {
   //   // Check if moving to a different date
   //   const newDate = info.event.start;
   //   const oldEvent = allEvents.find((event: CalendarEvent) => event.id === info.event.id);
-    
+
   //   if (oldEvent) {
   //     const oldDateStr = dayjs(oldEvent.start).format('YYYY-MM-DD');
   //     const newDateStr = dayjs(newDate).format('YYYY-MM-DD');
-      
+
   //     // If moving to a different date, check the event limit
   //     if (oldDateStr !== newDateStr) {
   //       // Count events on target date (excluding the event being moved)
@@ -579,7 +383,7 @@ export default function Calendar() {
   //         const eventDateStr = dayjs(event.start).format('YYYY-MM-DD');
   //         return eventDateStr === newDateStr && event.id !== info.event.id;
   //       }).length;
-        
+
   //       if (eventsOnTargetDate >= MAX_EVENTS_PER_DATE) {
   //         // Show warning modal and revert the move
   //         setLimitWarningInfo({
@@ -587,7 +391,7 @@ export default function Calendar() {
   //           eventCount: eventsOnTargetDate
   //         });
   //         setEventLimitModal(true);
-          
+
   //         // Revert the event to its original position
   //         if (info.revert) {
   //           info.revert();
@@ -628,11 +432,8 @@ export default function Calendar() {
 
   // Handle event resize to change duration
   const handleEventResize = (info: FullCalendarEventInfo) => {
-
-
     // const startDate = info.event.start;
     // const allEvent = allEvents;
-
 
     if (!info.event.start) return;
 
@@ -711,7 +512,6 @@ export default function Calendar() {
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [selectedEvent, eventDetailModal, handleEventRemove]);
 
- 
   // Handle manual event editing through form
   interface EventEditFormValues {
     date: dayjs.Dayjs;
@@ -719,6 +519,7 @@ export default function Calendar() {
     endTime?: dayjs.Dayjs;
     title?: string;
   }
+
   const handleEventEdit = (values: EventEditFormValues) => {
     if (!editingEvent) return;
 
@@ -726,6 +527,7 @@ export default function Calendar() {
       .hour(dayjs(values.startTime).hour())
       .minute(dayjs(values.startTime).minute())
       .toDate();
+      
     const endDate = values.endTime
       ? dayjs(values.date)
           .hour(dayjs(values.endTime).hour())
@@ -888,7 +690,6 @@ export default function Calendar() {
       calendarApi.changeView("dayGridMonth", date);
     }
   };
- 
 
   const EventLimitModal = (
     <Modal
@@ -896,46 +697,74 @@ export default function Calendar() {
       open={eventLimitModal}
       onCancel={() => setEventLimitModal(false)}
       footer={[
-        <Button 
-          key="ok" 
-          type="primary" 
+        <Button
+          key="ok"
+          type="primary"
           onClick={() => setEventLimitModal(false)}
         >
           OK, I understand
-        </Button>
+        </Button>,
       ]}
       width={500}
     >
       {limitWarningInfo && (
         <Space direction="vertical" style={{ width: "100%" }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-            <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: '24px', marginRight: '12px' }} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <CloseCircleOutlined
+              style={{
+                color: "#ff4d4f",
+                fontSize: "24px",
+                marginRight: "12px",
+              }}
+            />
             <div>
-              <h3 style={{ margin: 0, color: '#ff4d4f' }}>Cannot Add More Events</h3>
-              <p style={{ margin: '4px 0 0 0', color: '#666' }}>Maximum event limit reached for this date</p>
+              <h3 style={{ margin: 0, color: "#ff4d4f" }}>
+                Cannot Add More Events
+              </h3>
+              <p style={{ margin: "4px 0 0 0", color: "#666" }}>
+                Maximum event limit reached for this date
+              </p>
             </div>
           </div>
-          
-          <div style={{ 
-            background: '#fff2f0', 
-            border: '1px solid #ffccc7', 
-            borderRadius: '6px', 
-            padding: '12px',
-            marginBottom: '16px'
-          }}>
-            <div><strong>Date:</strong> {dayjs(limitWarningInfo.date).format('dddd, MMMM D, YYYY')}</div>
-            <div><strong>Current Events:</strong> {limitWarningInfo.eventCount}</div>
-            <div><strong>Maximum Allowed:</strong> {MAX_EVENTS_PER_DATE} events per day</div>
+
+          <div
+            style={{
+              background: "#fff2f0",
+              border: "1px solid #ffccc7",
+              borderRadius: "6px",
+              padding: "12px",
+              marginBottom: "16px",
+            }}
+          >
+            <div>
+              <strong>Date:</strong>{" "}
+              {dayjs(limitWarningInfo.date).format("dddd, MMMM D, YYYY")}
+            </div>
+            <div>
+              <strong>Current Events:</strong> {limitWarningInfo.eventCount}
+            </div>
+            <div>
+              <strong>Maximum Allowed:</strong> {MAX_EVENTS_PER_DATE} events per
+              day
+            </div>
           </div>
-          
-          <div style={{ 
-            background: '#f6ffed', 
-            border: '1px solid #b7eb8f', 
-            borderRadius: '6px', 
-            padding: '12px'
-          }}>
+
+          <div
+            style={{
+              background: "#f6ffed",
+              border: "1px solid #b7eb8f",
+              borderRadius: "6px",
+              padding: "12px",
+            }}
+          >
             <strong>💡 Suggestions:</strong>
-            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+            <ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
               <li>Try adding the event to a different date</li>
               <li>Remove an existing event from this date first</li>
               <li>Consider combining similar events</li>
@@ -1145,7 +974,6 @@ export default function Calendar() {
       )}
     </Modal>
   );
- 
 
   const [api, contextHolder] = notification.useNotification();
 
@@ -1168,7 +996,14 @@ export default function Calendar() {
       {EditEventModal}
       {EventDetailModal}
       {/* {ModalConfirm}{" "} */}
-      <Row gutter={[16, 16]}>
+      <h2> Event Title : Monthly meeting</h2>
+      <hr />
+      <Row
+        gutter={[16, 16]}
+        style={{
+          marginTop: 30,
+        }}
+      >
         <Col span={6}>
           <EventsListRadio
             events={userEvents}
@@ -1380,8 +1215,6 @@ export default function Calendar() {
                 drop={(info) => {
                   // Handle external event drop
                   console.log("Dropped event:", info);
-
-                  
                 }}
               />
             </div>

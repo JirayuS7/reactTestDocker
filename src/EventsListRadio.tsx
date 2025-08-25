@@ -1,13 +1,22 @@
-import { Button, Card, ConfigProvider, Space, Modal, DatePicker } from "antd";
+import {
+  Button,
+  Card,
+  ConfigProvider,
+  Space,
+  Modal,
+  DatePicker,
+  message,
+} from "antd";
 import type { Dayjs } from "dayjs";
 import {
   CheckSquareOutlined,
   CloseCircleOutlined,
   PlusCircleOutlined,
 } from "@ant-design/icons";
-import { Draggable } from "@fullcalendar/interaction";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createStyles } from "antd-style";
+import type { Dispatch, SetStateAction } from "react";
+import dayjs from "dayjs";
 interface EventItem {
   key: string;
   title: string;
@@ -40,6 +49,8 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
     }
   `,
 }));
+
+
 export default function EventsListRadio({
   events,
   selectedUser,
@@ -55,50 +66,11 @@ export default function EventsListRadio({
 }) {
   // Modal state for event limit warning
   const [limitModalOpen, setLimitModalOpen] = useState(false);
-  const [limitModalDate, setLimitModalDate] = useState<Date | null>(null);
+  // const [limitModalDate, setLimitModalDate] = useState<Date | null>(null);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      new Draggable(containerRef.current, {
-        itemSelector: ".fc-event",
-        eventData: function (eventEl) {
-          const buttonTitle = eventEl.getAttribute("title") || "";
-          const eventTitle = eventEl.innerText;
-          const parentCard = eventEl.closest(".ant-card");
-          const cardTitle =
-            parentCard?.querySelector(".ant-card-head-title")?.textContent ||
-            "Event";
-
-          // Determine time based on button type
-          let startTime = "09:00";
-          let endTime = "10:00";
-
-          if (buttonTitle.includes("Morning")) {
-            startTime = "06:00";
-            endTime = "12:00";
-          } else if (buttonTitle.includes("Afternoon")) {
-            startTime = "12:00";
-            endTime = "18:00";
-          }
-
-          return {
-            title: `${cardTitle} - ${eventTitle}`,
-            duration: buttonTitle.includes("Morning") ? "06:00" : "06:00", // 6 hours duration
-            extendedProps: {
-              timeSlot: eventTitle.toLowerCase(), // 'morning' or 'afternoon'
-              startTime: startTime,
-              endTime: endTime,
-            },
-          };
-        },
-      });
-    }
-  }, []);
 
   //  form
   const [selectedEvent, setSelectedEvent] = useState<EventItem[]>([]);
-  console.log("🚀 ~ EventsListRadio ~ selectedEvent:", selectedEvent);
 
   // Modal state for date range selection
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -113,24 +85,34 @@ export default function EventsListRadio({
 
   function handleModalSubmit() {
     // Check event limit for each date in the range
+    const eventLimit = 7;
+    const eventSource = [...eventsList, ...selectedEvent];
+
     if (dateRange[0] && dateRange[1]) {
-      const startDate = dateRange[0].toDate();
-      const endDate = dateRange[1].toDate();
-      
-      const dayCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      for (let i = 0; i < dayCount; i++) {
-        const currentDate = new Date(startDate.getTime());
-        currentDate.setDate(startDate.getDate() + i);
-        const currentDateStr = currentDate.toISOString().slice(0, 10);
-        const eventsOnDate = eventsList.filter(e => {
-          if (!e.start) return false;
-          const eventDateStr = (e.start instanceof Date ? e.start : new Date(e.start)).toISOString().slice(0, 10);
-          return eventDateStr === currentDateStr;
-        });
-        if (eventsOnDate.length >= 7) {
-          setLimitModalDate(currentDate);
-          setLimitModalOpen(true);
-          return;
+      const startDate = dayjs(dateRange[0]);
+      const endDate = dayjs(dateRange[1]);
+
+      // For each selected event, check if adding it would exceed the limit for that user (key) on the same day
+      for (let i = 0; i < selectedEvent.length; i++) {
+        const event = selectedEvent[i];
+        const eventKey = event.key;
+        // Check for each day in the range
+        let currentDate = startDate.clone();
+        while (currentDate.isBefore(endDate, 'day') || currentDate.isSame(endDate, 'day')) {
+          // Count events for this key on this day
+          const eventCount = eventSource.filter(
+            (e) => e.key === eventKey && dayjs(e.start).isSame(currentDate, 'day')
+          ).length;
+          if (eventCount >= eventLimit) {
+            setLimitModalOpen(true);
+            message.error(
+              `Cannot add event for user ${eventKey} on ${currentDate.format(
+                "YYYY-MM-DD"
+              )}: Maximum of ${eventLimit} events allowed per user per day.`
+            );
+            return;
+          }
+          currentDate = currentDate.add(1, 'day');
         }
       }
     }
@@ -151,40 +133,44 @@ export default function EventsListRadio({
     setIsModalOpen(false);
     setDateRange([null, null]);
     setSelectedEvent([]);
-    
   }
 
   const { styles } = useStyle();
 
-
-
-  const ModalWarning =  <Modal
-        title="Event Limit Reached"
-        open={limitModalOpen}
-        onCancel={() => setLimitModalOpen(false)}
-        footer={[
-          <Button key="ok" type="primary" onClick={() => setLimitModalOpen(false)}>
-            OK
-          </Button>
-        ]}
-      >
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>
-            Cannot add event: Maximum of 7 events allowed per date.
+  const ModalWarning = (
+    <Modal
+      title="Event Limit Reached"
+      open={limitModalOpen}
+      onCancel={() => setLimitModalOpen(false)}
+      footer={[
+        <Button
+          key="ok"
+          type="primary"
+          onClick={() => setLimitModalOpen(false)}
+        >
+          OK
+        </Button>,
+      ]}
+    >
+      <Space direction="vertical" style={{ width: "100%" }}>
+        <span style={{ color: "#ff4d4f", fontWeight: "bold" }}>
+          Cannot add event: Maximum of 7 events allowed per date.
+        </span>
+        {/* {limitModalDate && (
+          <span>
+            <strong>Date:</strong> {limitModalDate.toLocaleDateString()}
           </span>
-          {limitModalDate && (
-            <span>
-              <strong>Date:</strong> {limitModalDate.toLocaleDateString()}
-            </span>
-          )}
-          <span>Please choose a different date or remove an event from this date first.</span>
-        </Space>
-      </Modal>
-
+        )} */}
+        <span>
+          Please choose a different date or remove an event from this date
+          first.
+        </span>
+      </Space>
+    </Modal>
+  );
 
   return (
     <div ref={containerRef}>
-
       {ModalWarning}
       <h3>User List ({events.length}) </h3>
 
@@ -237,7 +223,7 @@ export default function EventsListRadio({
         </Space>
       </Modal>
 
-      {selectedUser && selectedEvent   && (
+      {selectedUser && selectedEvent && (
         <div style={{ marginTop: "16px" }}>
           <Button
             color="primary"
@@ -255,7 +241,7 @@ export default function EventsListRadio({
     </div>
   );
 }
-import type { Dispatch, SetStateAction } from "react";
+
 function eventCard(
   event: EventItem,
   selectedUser: string | null,
