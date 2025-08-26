@@ -21,6 +21,8 @@ import {
   Form,
   notification,
   message,
+  Card,
+  Flex,
 } from "antd";
 import { LinkOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -29,6 +31,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import EventsListRadio from "./EventsListRadio";
 import { events } from "./eventsMokup";
 import { checkLimitEvent } from "./services/checkLimitEvent";
+import EventsListEquipment from "./EventsListEquipment";
 
 export interface CalendarEvent {
   id: string;
@@ -98,8 +101,10 @@ export default function Calendar() {
     const dayNumber = dayInfo.dayNumberText;
     const eventsCount = countEventsOnDate(date, allEvents);
 
+    const isToday = dayjs(date).isSame(dayjs(), "day");
+
     let backgroundColor = "";
-    let textColor = "";
+    let textColor = "#062665";
     let warningIcon = null;
 
     if (eventsCount >= MAX_EVENTS_PER_DATE) {
@@ -120,13 +125,13 @@ export default function Calendar() {
       <div
         style={{
           backgroundColor,
-          color: textColor,
+          color: isToday  ?  "#35B6FF": textColor,
           padding: "2px 4px",
           borderRadius: "3px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: "12px",
+          fontSize: "18px",
 
           fontWeight:
             eventsCount >= MAX_EVENTS_PER_DATE - 2 ? "bold" : "normal",
@@ -134,7 +139,7 @@ export default function Calendar() {
       >
         {dayNumber}
         {warningIcon}
-        {eventsCount > 0 && (
+        {/* {eventsCount > 0 && (
           <span
             style={{
               fontSize: "8px",
@@ -144,7 +149,7 @@ export default function Calendar() {
           >
             ({eventsCount})
           </span>
-        )}
+        )} */}
       </div>
     );
   };
@@ -219,7 +224,8 @@ export default function Calendar() {
     },
   ]);
 
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [selectedUser, setSelectedUser] = useState<number[] | null>([]);
+
   const [eventDetailModal, setEventDetailModal] = useState(false);
   const [eventEditModal, setEventEditModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<{
@@ -240,6 +246,16 @@ export default function Calendar() {
     key?: string;
     userId?: number;
   } | null>(null);
+
+  // set all user active
+
+  useEffect(() => {
+    const users = userEvents.map((user) => user.userId);
+
+    //  check duplicate
+    const uniqueUsers = Array.from(new Set(users));
+    setSelectedUser(uniqueUsers);
+  }, []);
 
   // Function to save events to localStorage
   const saveEventsToLocalStorage = useCallback((events: typeof allEvents) => {
@@ -269,7 +285,7 @@ export default function Calendar() {
   }, [allEvents, saveEventsToLocalStorage]);
 
   const handleEventReceive = (info: FullCalendarEventInfo) => {
-    console.log("🚀 ~ handleEventReceive ~ info:", info);
+  
     // Check if the event has time information from the dragged button
     const timeSlot = info.event.extendedProps?.timeSlot;
     const startTime = info.event.extendedProps?.startTime;
@@ -349,8 +365,8 @@ export default function Calendar() {
 
       // Update filtered list based on current user selection
       if (selectedUser) {
-        const filteredEvents = updatedAllEvents.filter(
-          (event) => event.userId === selectedUser
+        const filteredEvents = updatedAllEvents.filter((event) =>
+          selectedUser.includes(event.userId)
         );
         setEventsList(filteredEvents);
       } else {
@@ -388,7 +404,7 @@ export default function Calendar() {
       }
 
       const selectedUserEvents: CalendarEvent[] = allEvents.filter(
-        (item: CalendarEvent) => item.userId === selectedUser
+        (item: CalendarEvent) => selectedUser.includes(item.userId)
       );
       setEventsList(selectedUserEvents);
     } else {
@@ -531,50 +547,6 @@ export default function Calendar() {
     message.success(`Event "${editingEvent.title}" updated successfully`);
   };
 
-  // const handleTimeSelection = (startHour: number, endHour: number) => {
-  //   if (!droppedEventInfo) return;
-
-  //   const { date, draggedEl } = droppedEventInfo;
-  //   const title =
-  //     draggedEl.innerText ||
-  //     (draggedEl.getAttribute("data-event-title") ?? "New Event");
-
-  //   const startDate = new Date(date);
-  //   startDate.setHours(startHour, 0, 0, 0);
-
-  //   const endDate = new Date(date);
-  //   endDate.setHours(endHour, 0, 0, 0);
-
-  //   let color = "#00000";
-
-  //   if (startHour < 12) {
-  //     color = "green";
-  //   }
-
-  //   if (startHour > 12) {
-  //     color = "blue";
-  //   }
-
-  //   const newEvent = {
-  //     id: `event-${Date.now()}`,
-  //     title: title,
-  //     start: startDate,
-  //     end: endDate,
-  //     color: color,
-  //   };
-
-  //   setEventsList((prevEvents) => [...prevEvents, newEvent]);
-  //   setExternalEvents((prevEvents) =>
-  //     prevEvents.filter((event) => event.title !== title)
-  //   );
-
-  //   // Also remove the original dragged element from the DOM
-  //   draggedEl.remove();
-
-  //   // setIsModalOpen(false);
-  //   setDroppedEventInfo(null);
-  // };
-
   const updateMonthTitles = () => {
     setTimeout(() => {
       updateToolTip();
@@ -643,8 +615,6 @@ export default function Calendar() {
       titleEl.appendChild(link);
     });
   };
-  console.log("🚀 ~ updateMonthTitles ~ updateMonthTitles:", updateMonthTitles);
-  console.log("🚀 ~ updateMonthTitles ~ updateMonthTitles:", updateMonthTitles);
 
   const updateToolTip = () => {
     // change tool tip
@@ -967,15 +937,261 @@ export default function Calendar() {
       {EditEventModal}
       {EventDetailModal}
       {/* {ModalConfirm}{" "} */}
-      <h2> Event Title : Monthly meeting</h2>
-      <hr />
+      <h2 className="calendar-header"> Schedule</h2>
+
       <Row
         gutter={[16, 16]}
         style={{
           marginTop: 30,
         }}
       >
-        <Col span={6}>
+        <Col span={16}>
+          <Card>
+            <div className="eventStatus">
+              <div className="eventCircleBlock">
+                <span
+                  style={{ backgroundColor: "#7AB800" }}
+                  className="eventCircle"
+                ></span>{" "}
+                งานที่เสร็จเรียบร้อยแล้ว
+              </div>
+              <div className="eventCircleBlock">
+                <span
+                  style={{ backgroundColor: "#FFA500" }}
+                  className="eventCircle"
+                ></span>{" "}
+                งานที่ยังไม่เสร็จ
+              </div>
+              <div className="eventCircleBlock">
+                <span
+                  style={{ background: "#7E7E88" }}
+                  className="eventCircle"
+                ></span>{" "}
+                งานที่ยังไม่ถึงวันเริ่มดำเนินการ
+              </div>
+            </div>
+
+            <div className="calendar-container">
+              {/* Toggle button for year view */}
+              {currentView === "multiMonthYear" && (
+                <div
+                  style={{
+                    marginBottom: 16,
+                    textAlign: "right",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Tooltip
+                    title={
+                      isDotView
+                        ? "Switch to show full event titles"
+                        : "Switch to show events as dots"
+                    }
+                  ></Tooltip>
+                </div>
+              )}
+
+              <div className="calendar-wrapper">
+                <FullCalendar
+                  ref={calendarRef}
+                  plugins={[
+                    dayGridPlugin,
+                    multiMonthPlugin,
+                    timeGridPlugin,
+                    interactionPlugin,
+                  ]}
+                  initialView="dayGridMonth"
+                  editable={true}
+                  droppable={true}
+                  events={eventsList}
+                  height="100vh" // Set explicit height
+                  dayCellContent={renderDayCellContent} // Custom day cell content with event count
+                  headerToolbar={{
+                    left: "prev,next today",
+                    center: "title",
+                    right:
+                      "multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay",
+                  }}
+                  // customButtons={{
+                  //   dotToggle: {
+                  //     text: isDotView ? "Show Titles" : "Show Dots",
+                  //     click: () => setIsDotView(!isDotView),
+                  //   },
+                  // }}
+
+                  // eventContent={renderEventWithTooltip} // Apply custom rendering
+                  views={{
+                    timeGridDay: {
+                      type: "timeGrid",
+                      eventMaxStack: 3,
+                      buttonText: "Day",
+                      allDaySlot: false,
+                      slotMinTime: "06:00:00",
+                      slotMaxTime: "22:00:00",
+                      // allDaySlot: true,
+                      slotDuration: "00:30:00", // 30-minute time slots
+                      scrollTime: "08:00:00", // Scroll to 8 AM by default
+                      eventClassNames: "day-event-title",
+                      contentHeight: "auto",
+                      expandRows: true,
+                      slotEventOverlap: true,
+                      buttonIcons: {
+                        prev: "chevron-left",
+                        next: "chevron-right",
+                        today: "today",
+                      },
+                      // dayMaxEventRows: 7,
+                    },
+                    dayGridMonth: {
+                      type: "dayGrid",
+                      duration: { months: 1 },
+                      allDaySlot: false,
+                      buttonText: "Month",
+                      dayMaxEvents: 3, // Show max 5 events then "read more"
+                      eventClassNames: "day-event-title",
+                    },
+                    multiMonthYear: {
+                      type: "multiMonth",
+                      duration: { years: 1 },
+                      buttonText: "Year",
+                      allDaySlot: false,
+                      eventClassNames: "day-event-title",
+                      // dayCount: 365,
+                      multiMonthTitleFormat: {
+                        month: "long",
+                      },
+
+                      // Display events as dots in year view based on toggle
+                      eventDisplay: isDotView ? "dot" : "block",
+                      dayMaxEvents: isDotView ? 1 : 2, // Show max 1 dot then "+more" for better control
+                      // Add these for better year view control
+                      contentHeight: "auto",
+                      aspectRatio: 1.35, // Adjust this to control month layout
+                    },
+                    timeGridWeek: {
+                      type: "timeGrid",
+                      duration: { weeks: 1 },
+                      buttonText: "Week",
+                      slotMinTime: "06:00:00",
+                      slotMaxTime: "22:00:00",
+                      allDaySlot: false,
+                      dayMaxEventRows: 3,
+                      eventMaxStack: 3,
+                      eventClassNames: "day-event-title",
+                    },
+                  }}
+                  navLinks={true}
+                  viewDidMount={(info) => {
+                    setCurrentView(
+                      info.view.type === "multiMonth"
+                        ? "multiMonthYear"
+                        : info.view.type
+                    );
+                    if (info.view.type === "multiMonth") {
+                      setTimeout(() => {
+                        updateMonthTitles();
+                        // customizeMoreLinks();
+                      }, 100);
+                    }
+
+                    // updateToolTip();
+                  }}
+                  eventsSet={() => {
+                    setTimeout(() => {
+                      if (
+                        calendarRef.current?.getApi().view.type === "multiMonth"
+                      ) {
+                        updateMonthTitles();
+                        // customizeMoreLinks();
+                      }
+                    }, 100);
+
+                    // updateToolTip();
+                  }}
+                  navLinkDayClick={(date) => {
+                    // When clicking on a day number, go to month view of that day
+                    handleDateClick(date);
+                  }}
+                  navLinkWeekClick={(weekStart) => {
+                    // When clicking on a week number, go to month view of that week
+                    handleDateClick(weekStart);
+                  }}
+                  eventClick={(info) => {
+                    // Show event details modal instead of opening new page
+                    if (info.event.start) {
+                      setSelectedEvent({
+                        title: info.event.title,
+                        start: info.event.start,
+                        end: info.event.end || undefined,
+                        userId: info.event.extendedProps.userId || 0,
+                        id: info.event.id,
+                        color:
+                          info.event.backgroundColor || info.event.borderColor,
+                        key: info.event.extendedProps.key || "1",
+                      });
+                      setEventDetailModal(true);
+                    }
+                  }}
+                  datesSet={updateMonthTitles} // runs on view change
+                  eventAdd={updateMonthTitles} // runs when new event is added
+                  eventChange={() => {}} // runs when event changes
+                  eventRemove={updateMonthTitles} // runs when event removed
+                  eventReceive={handleEventReceive}
+                  // eventDrop={handleEventDrop} // Handle event drag and drop
+                  eventResize={handleEventResize} // Handle event resize
+                  drop={(info) => {
+                    // Handle external event drop
+                    console.log("Dropped event:", info);
+                  }}
+                />
+              </div>
+            </div>
+
+            <Flex
+              style={{ marginTop: 16 }}
+              align="center"
+              gap={10}
+              justify="end"
+            >
+              <Button color="default" variant="outlined">
+                Export to Excel
+              </Button>
+              <Button onClick={resetEventsToOriginal} danger type="primary">
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  saveEventsToLocalStorage(allEvents);
+                  openNotification();
+                }}
+              >
+                Save
+              </Button>
+            </Flex>
+
+            {/* <Space style={{ marginTop: 16 }} align="center" wrap>
+              <Button
+                type="primary"
+                onClick={() => {
+                  saveEventsToLocalStorage(allEvents);
+                  openNotification();
+                }}
+              >
+               Save
+              </Button>
+              <Button onClick={resetEventsToOriginal} danger>
+                Reset to Original
+              </Button>
+
+              <div style={{ marginLeft: 16, color: "#666" }}>
+                Total Events: {allEvents.length} | Filtered: {eventsList.length}{" "}
+                | Saved: {localStorage.getItem("calendarEvents") ? "Yes" : "No"}
+              </div>
+            </Space> */}
+          </Card>
+        </Col>{" "}
+        <Col span={8}>
           <EventsListRadio
             events={userEvents}
             selectedUser={selectedUser}
@@ -986,261 +1202,9 @@ export default function Calendar() {
             setLimitModalOpen={setLimitModalOpen}
             onNavigateToDate={handleDateClick}
           />
+
+          <EventsListEquipment />
           {/* <UserLists /> */}
-        </Col>
-        <Col span={18}>
-          <div className="calendar-container">
-            {/* Toggle button for year view */}
-            {currentView === "multiMonthYear" && (
-              <div
-                style={{ marginBottom: 16, textAlign: "right", flexShrink: 0 }}
-              >
-                <Tooltip
-                  title={
-                    isDotView
-                      ? "Switch to show full event titles"
-                      : "Switch to show events as dots"
-                  }
-                ></Tooltip>
-              </div>
-            )}
-
-            <div className="calendar-wrapper">
-              <FullCalendar
-                ref={calendarRef}
-                plugins={[
-                  dayGridPlugin,
-                  multiMonthPlugin,
-                  timeGridPlugin,
-                  interactionPlugin,
-                ]}
-                initialView="dayGridMonth"
-                editable={true}
-                droppable={true}
-                events={eventsList}
-                height="100vh" // Set explicit height
-                dayCellContent={renderDayCellContent} // Custom day cell content with event count
-                headerToolbar={{
-                  left: "prev,next today",
-                  center: "title",
-                  right: "timeGridDay,timeGridWeek,dayGridMonth,multiMonthYear",
-                }}
-                // customButtons={{
-                //   dotToggle: {
-                //     text: isDotView ? "Show Titles" : "Show Dots",
-                //     click: () => setIsDotView(!isDotView),
-                //   },
-                // }}
-
-                // eventContent={renderEventWithTooltip} // Apply custom rendering
-                views={{
-                  timeGridDay: {
-                    type: "timeGrid",
-                    eventMaxStack: 7,
-                    buttonText: "Day",
-                    slotMinTime: "06:00:00",
-                    slotMaxTime: "22:00:00",
-                    // allDaySlot: true,
-                    slotDuration: "00:30:00", // 30-minute time slots
-                    scrollTime: "08:00:00", // Scroll to 8 AM by default
-                    eventClassNames: "day-event-title",
-                    contentHeight: "auto",
-                    expandRows: true,
-                    slotEventOverlap: true,
-                    buttonIcons: {
-                      prev: "chevron-left",
-                      next: "chevron-right",
-                      today: "today",
-                    },
-                    // dayMaxEventRows: 7,
-                  },
-                  dayGridMonth: {
-                    type: "dayGrid",
-                    duration: { months: 1 },
-                    buttonText: "Month",
-                    dayMaxEvents: 5, // Show max 5 events then "read more"
-                    eventClassNames: "day-event-title",
-                  },
-                  multiMonthYear: {
-                    type: "multiMonth",
-                    duration: { years: 1 },
-                    buttonText: "Year",
-                    eventClassNames: "day-event-title",
-                    // dayCount: 365,
-                    multiMonthTitleFormat: {
-                      month: "long",
-                    },
-
-                    // Display events as dots in year view based on toggle
-                    eventDisplay: isDotView ? "dot" : "block",
-                    dayMaxEvents: isDotView ? 1 : 2, // Show max 1 dot then "+more" for better control
-                    // Add these for better year view control
-                    contentHeight: "auto",
-                    aspectRatio: 1.35, // Adjust this to control month layout
-                  },
-                  timeGridWeek: {
-                    type: "timeGrid",
-                    duration: { weeks: 1 },
-                    buttonText: "Week",
-                    slotMinTime: "06:00:00",
-                    slotMaxTime: "22:00:00",
-                    allDaySlot: true,
-                    dayMaxEventRows: 7,
-                    eventMaxStack: 7,
-                    eventClassNames: "day-event-title",
-                  },
-                }}
-                navLinks={true}
-                // Custom "read more" link content
-                // moreLinkContent={(arg) => {
-                //   if (currentView === "dayGridMonth") {
-                //     return {
-                //       html: `<button class="read-more-btn">📖 See More (${arg.num})</button>`,
-                //     };
-                //   } else if (currentView === "multiMonthYear" && isDotView) {
-                //     const eventCount = arg.num;
-                //     // const dotColor = '#3788d8';
-
-                //     if (eventCount === 1) {
-                //       return {
-                //         html: `<span class="custom-more-events">
-
-                //           <span class="custom-more-text">+ ${eventCount}  </span>
-                //          </span>`,
-                //       };
-                //     } else {
-                //       return {
-                //         html: `<span class="custom-more-events">
-
-                //           <span class="custom-more-text">+ ${eventCount}  </span>
-                //          </span>`,
-                //       };
-                //     }
-                //   } else if (currentView === "timeGridDay") {
-                //     const eventCount = arg.num;
-
-                //     if (eventCount === 1) {
-                //       return `<span class="custom-more-events">
-                //       <span class="custom-more-text">+ ${eventCount} </span>
-                //     </span>`;
-                //     }
-                //   }
-                //   return `+ ${arg.num} more`;
-                // }}
-                // moreLinkClick={handleMoreLinkClick}
-                // Custom event count display for year view
-                viewDidMount={(info) => {
-                  setCurrentView(
-                    info.view.type === "multiMonth"
-                      ? "multiMonthYear"
-                      : info.view.type
-                  );
-                  if (info.view.type === "multiMonth") {
-                    setTimeout(() => {
-                      updateMonthTitles();
-                      // customizeMoreLinks();
-                    }, 100);
-                  }
-
-                  // updateToolTip();
-                }}
-                eventsSet={() => {
-                  setTimeout(() => {
-                    if (
-                      calendarRef.current?.getApi().view.type === "multiMonth"
-                    ) {
-                      updateMonthTitles();
-                      // customizeMoreLinks();
-                    }
-                  }, 100);
-
-                  // updateToolTip();
-                }}
-                navLinkDayClick={(date) => {
-                  // When clicking on a day number, go to month view of that day
-                  handleDateClick(date);
-                }}
-                navLinkWeekClick={(weekStart) => {
-                  // When clicking on a week number, go to month view of that week
-                  handleDateClick(weekStart);
-                }}
-                eventClick={(info) => {
-                  // Show event details modal instead of opening new page
-                  if (info.event.start) {
-                    setSelectedEvent({
-                      title: info.event.title,
-                      start: info.event.start,
-                      end: info.event.end || undefined,
-                      userId: info.event.extendedProps.userId || 0,
-                      id: info.event.id,
-                      color:
-                        info.event.backgroundColor || info.event.borderColor,
-                      key: info.event.extendedProps.key || "1",
-                    });
-                    setEventDetailModal(true);
-                  }
-                }}
-                datesSet={updateMonthTitles} // runs on view change
-                eventAdd={updateMonthTitles} // runs when new event is added
-                eventChange={( ) => {
-                  // const dateRange: [dayjs.Dayjs, dayjs.Dayjs] = [
-                  //   dayjs(info.event.start),
-                  //   dayjs(info.event.end),
-                  // ];
-
-                  // const eventSource = calendarRef.current
-                  //   ?.getApi()
-                  //   .getEventById(info.event.id);
-                  // console.log("🚀 ~ eventSource:", eventSource)
-
-                  // const selectedEvent = {
-                  //   title: info.event.title,
-                  //   start: info.event.start,
-                  //   end: info.event.end || undefined,
-                  //   userId: info.event.extendedProps.userId || 0,
-                  //   id: info.event.id,
-                  //   color: info.event.backgroundColor || info.event.borderColor,
-                  //   key: info.event.extendedProps.key || "1",
-                  // };
-
-                  // checkLimitEvent({
-                  //   dateRange,
-                  //   selectedEvent,
-                  //   eventSource,
-                  //   setLimitModalOpen,
-                  // });
-                }} // runs when event changes
-                eventRemove={updateMonthTitles} // runs when event removed
-                eventReceive={handleEventReceive}
-                // eventDrop={handleEventDrop} // Handle event drag and drop
-                eventResize={handleEventResize} // Handle event resize
-                drop={(info) => {
-                  // Handle external event drop
-                  console.log("Dropped event:", info);
-                }}
-              />
-            </div>
-          </div>
-
-          <Space style={{ marginTop: 16 }} align="center" wrap>
-            <Button
-              type="primary"
-              onClick={() => {
-                saveEventsToLocalStorage(allEvents);
-                openNotification();
-              }}
-            >
-              Save to Storage
-            </Button>
-            <Button onClick={resetEventsToOriginal} danger>
-              Reset to Original
-            </Button>
-
-            <div style={{ marginLeft: 16, color: "#666" }}>
-              Total Events: {allEvents.length} | Filtered: {eventsList.length} |
-              Saved: {localStorage.getItem("calendarEvents") ? "Yes" : "No"}
-            </div>
-          </Space>
         </Col>
       </Row>
     </div>

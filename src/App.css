@@ -1,5 +1,5 @@
 #root {
-  max-width: 1280px;
+  max-width: 1400px;
  width: 100%;
   margin: 0 auto;
   padding: 2rem;
@@ -37,7 +37,8 @@ a { color: #111;}
 }
 
 body {
-  background-color: #fff;
+  background-color: #ececec;
+  font-family: "DB Heavent"
 }
 
 .card {

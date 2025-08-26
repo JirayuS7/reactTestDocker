@@ -426,13 +426,141 @@
 }
 
 .day-event-title .fc-event-title {
-     text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 
-.ant-card { cursor: pointer;}
+.ant-card {
+  cursor: pointer;
+}
 
-.selectedCard { 
+.selectedCard {
   background-color: #e6f4ff;
 }
 
-.fc-event { cursor: move;}
+.fc-event {
+  cursor: move;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+.fc .fc-button-primary {
+  background: #00338d;
+}
+
+.fc .fc-today-button {
+  background: #078eff;
+  border: 1px solid #078eff;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: #ebf7ff;
+}
+
+.fc .fc-scrollgrid table {
+  border-left-style: inherit;
+  border-right-style: inherit;
+  border-top-style: inherit;
+}
+
+.fc-scrollgrid-sync-table,
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border: 1px solid #00338d66;
+}
+
+.eventStatus {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: end;
+}
+.eventStatus div {
+  margin: 0 10px;
+}
+.eventCircle {
+  width: 17px;
+  height: 17px;
+  display: inline-block;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.eventCircleBlock {
+  display: flex;
+  align-items: center;
+}
+
+/* calendar-header  */
+.calendar-header {
+  font-size: 35px;
+  text-align: left;
+}
+
+/* events-list-equipment */
+
+.events-list-equipment {
+  max-width: 100%;
+  margin-bottom: 1rem;
+}
+
+.events-list-equipment ul {
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  display: block;
+}
+
+.events-list-equipment ul li {
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+  display: flex;
+  background-color: #fff;
+  border-radius: 3px;
+  max-width: 100%;
+}
+
+.events-list-equipment ul li span:first-child {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0.5rem;
+  margin-right: 0.4rem;
+}
+
+.events-list-equipment ul li span:nth-child(2) {
+  display: inline-flex;
+  width: 120px;
+}
+
+.events-list-equipment .note {
+  color: #f60105;
+  text-align: left;
+}
+
+.events-list-equipment button {
+  background-color: #fff;
+  border: 0;
+  color: #07344a;
+  font-size: 22px;
+}
+
+.events-list-equipment .button-group {
+  margin: 1rem 0;
+}
+
+/*  Event Inspector Name  */
+.EventInspectorName {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.EventInspectorName .ant-card .ant-card-body {
+  padding: 0.5rem;
+}
+
+.event-card-info strong {
+  display: inline-flex;
+}

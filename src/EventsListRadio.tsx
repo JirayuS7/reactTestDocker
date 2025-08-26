@@ -1,12 +1,16 @@
-import { Button, Card, ConfigProvider, Space, Modal, DatePicker } from "antd";
-import type { Dayjs } from "dayjs";
 import {
-  CheckSquareOutlined,
-  CloseCircleOutlined,
-  PlusCircleOutlined,
-} from "@ant-design/icons";
+  Button,
+  Card,
+  ConfigProvider,
+  Space,
+  Modal,
+  DatePicker,
+  Flex,
+  Checkbox,
+} from "antd";
+import type { Dayjs } from "dayjs";
+
 import { useRef, useState } from "react";
-import { createStyles } from "antd-style";
 import type { Dispatch, SetStateAction } from "react";
 import { checkLimitEvent } from "./services/checkLimitEvent";
 export interface EventItem {
@@ -18,31 +22,6 @@ export interface EventItem {
   userId: number;
   color?: string;
 }
-const useStyle = createStyles(({ prefixCls, css }) => ({
-  linearGradientButton: css`
-    &.${prefixCls}-btn-primary:not([disabled]):not(
-        .${prefixCls}-btn-dangerous
-      ) {
-      > span {
-        position: relative;
-      }
-
-      &::before {
-        content: "";
-        background: linear-gradient(135deg, #6253e1, #04befe);
-        position: absolute;
-        inset: -1px;
-        opacity: 1;
-        transition: all 0.3s;
-        border-radius: inherit;
-      }
-
-      &:hover::before {
-        opacity: 0;
-      }
-    }
-  `,
-}));
 
 export default function EventsListRadio({
   events,
@@ -55,8 +34,8 @@ export default function EventsListRadio({
   onNavigateToDate,
 }: {
   events: EventItem[];
-  selectedUser: number | null;
-  setSelectedUser: (user: number | null) => void;
+  selectedUser: number[] | null;
+  setSelectedUser: (user: number[] | null) => void;
   eventsList: EventItem[];
   setEventsList: (events: EventItem[]) => void;
   limitModalOpen: boolean;
@@ -123,11 +102,9 @@ export default function EventsListRadio({
     setSelectedEvent([]);
   }
 
-  const { styles } = useStyle();
-
   const ModalWarning = (
     <Modal
-      title="Event Limit Reached"
+      title="Daily task limit reached"
       open={limitModalOpen}
       onCancel={() => setLimitModalOpen(false)}
       footer={[
@@ -141,61 +118,75 @@ export default function EventsListRadio({
       ]}
     >
       <Space direction="vertical" style={{ width: "100%" }}>
-        <span style={{ color: "#ff4d4f", fontWeight: "bold" }}>
-          Cannot add event: Maximum of 7 events allowed per date.
-        </span>
         {/* {limitModalDate && (
           <span>
             <strong>Date:</strong> {limitModalDate.toLocaleDateString()}
           </span>
         )} */}
-        <span>
-          Please choose a different date or remove an event from this date
-          first.
+        <span
+          style={{
+            color: "#FF2D55",
+            fontWeight: "bold",
+          }}
+        >
+          More than 7 tasks have been assigned today.
         </span>
       </Space>
     </Modal>
   );
 
-  return (
-    <div ref={containerRef}>
-      {ModalWarning}
-      <h3>User List ({events.length}) </h3>
+  const checkSubmitButton = selectedEvent && selectedEvent?.length > 0;
+  const checkClearButton =
+    (selectedUser && selectedUser?.length > 0) ||
+    (selectedEvent && selectedEvent?.length > 0);
 
-      {events &&
-        events.map((event) =>
-          eventCard(
-            event,
-            selectedUser,
-            setSelectedUser,
-            setSelectedEvent,
-            selectedEvent
-          )
-        )}
+  return (
+    <div ref={containerRef} className="EventInspectorName">
+      {ModalWarning}
+      <h3>Inspector Name </h3>
+
+      <Space direction="vertical">
+        {events &&
+          events.map((event) =>
+            eventCard(
+              event,
+              selectedUser,
+              setSelectedUser,
+              setSelectedEvent,
+              selectedEvent
+            )
+          )}
+      </Space>
 
       {events.length == 0 && <p>No events available</p>}
 
-      {selectedEvent && selectedEvent?.length > 0 && (
-        <ConfigProvider
-          button={{
-            className: styles.linearGradientButton,
-          }}
-        >
-          <div style={{ marginTop: "16px" }}>
-            <Button type="primary" size="large" onClick={AddNewEvent}>
-              <PlusCircleOutlined /> Submit Events ( {selectedEvent.length} )
-            </Button>
-          </div>
-        </ConfigProvider>
-      )}
-
       {/* Date Range Modal */}
       <Modal
-        title="Select Date Range for Event"
+        title="Select the date range for your event"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
-        onOk={handleModalSubmit}
-        okText="Add Event to Calendar"
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setIsModalOpen(false)}
+            variant="filled"
+            color="default"
+            style={{
+              color: "#fff",
+              backgroundColor: "#CACACA",
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="ok"
+            type="primary"
+            onClick={handleModalSubmit}
+            disabled={!dateRange[0] || !dateRange[1]}
+          >
+            Add Event to Calendar
+          </Button>,
+        ]}
       >
         <Space direction="vertical" style={{ width: "100%" }}>
           <span>Select the date range for your event:</span>
@@ -211,115 +202,152 @@ export default function EventsListRadio({
         </Space>
       </Modal>
 
-      {selectedUser && selectedEvent && (
+      <Flex justify="end" gap={10}>
+        {" "}
+        <div style={{ marginTop: "16px" }}>
+          <Button
+            type="primary"
+            onClick={AddNewEvent}
+            disabled={!checkSubmitButton}
+          >
+            Submit Events ( {selectedEvent.length} )
+          </Button>
+        </div>
         <div style={{ marginTop: "16px" }}>
           <Button
             color="primary"
-            variant="filled"
+            variant="outlined"
+            disabled={!checkClearButton}
             onClick={() => {
               // Clear all events logic
-              setSelectedUser(null);
+              setSelectedUser([]);
               setSelectedEvent([]);
             }}
           >
-            <CloseCircleOutlined /> Clear All
+            Clear
           </Button>
         </div>
-      )}
+      </Flex>
     </div>
   );
 }
 
 function eventCard(
   event: EventItem,
-  selectedUser: number | null,
-  setSelectedUser: (user: number | null) => void,
+  selectedUser: number[] | null,
+  setSelectedUser: (user: number[] | null) => void,
   setSelectedEvent: Dispatch<SetStateAction<EventItem[]>>,
   selectedEvent: EventItem[]
 ) {
-  const active = selectedUser === event.userId;
+  const active = selectedUser?.includes(event.userId);
 
   return (
     <Card
       key={event.key}
-      className={` ${selectedUser === event.userId ? "selectedCard" : ""}`}
+      className={` ${active ? "selectedCard" : ""}`}
       size="small"
     >
-      <div>
-        {" "}
-        <h3
-          onClick={() => setSelectedUser(event.userId)}
-          style={{
-            margin: "5px 0 15px 0",
-            cursor: "pointer",
-          }}
-        >
-          {active && <CheckSquareOutlined color="#13c2c2" />}
-          <span style={{ marginLeft: "8px" }}> {event.title} </span>
-        </h3>{" "}
-      </div>
-      <Space>
-        <Button
-          color="cyan"
-          variant={
-            selectedEvent.some(
-              (e) => e.key === event.key && e.timeSlot === "morning"
-            )
-              ? "solid"
-              : "dashed"
-          }
-          title="Morning Time : 06:00 - 12:00"
-          onClick={() =>
-            setSelectedEvent((prev: EventItem[]) => {
-              const isSelected = prev.some(
+      <Flex>
+        <div className="event-card-info">
+          {" "}
+          <div>
+            <div>
+              {" "}
+              <Checkbox
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    // Add userId if not already present
+                    if (!selectedUser?.includes(event.userId)) {
+                      setSelectedUser([...(selectedUser ?? []), event.userId]);
+                    }
+                  } else {
+                    // Remove userId when unchecked
+                    setSelectedUser(
+                      (selectedUser ?? []).filter((id) => id !== event.userId)
+                    );
+                  }
+                }}
+                checked={selectedUser?.includes(event.userId)}
+              >
+                {" "}
+                <strong> Name :</strong>{" "}
+                <span style={{ marginLeft: "8px" }}> {event.title} </span>
+              </Checkbox>
+            </div>
+            <div
+              style={{
+                marginLeft: 27,
+              }}
+            >
+              <strong> Email :</strong> <span> zAdsawamateI@pttep.com</span>
+            </div>
+          </div>{" "}
+        </div>
+        <Space>
+          <Button
+            color="primary"
+            variant={"solid"}
+            title="Morning Time : 06:00 - 12:00"
+            onClick={() =>
+              setSelectedEvent((prev: EventItem[]) => {
+                const isSelected = prev.some(
+                  (e) => e.key === event.key && e.timeSlot === "morning"
+                );
+                if (isSelected) {
+                  // Remove this slot
+                  return prev.filter(
+                    (e) => !(e.key === event.key && e.timeSlot === "morning")
+                  );
+                } else {
+                  // Remove any existing slot for this event, then add morning
+                  const filtered = prev.filter((e) => e.key !== event.key);
+                  return [...filtered, { ...event, timeSlot: "morning" }];
+                }
+              })
+            }
+            style={{
+              opacity: selectedEvent.some(
                 (e) => e.key === event.key && e.timeSlot === "morning"
-              );
-              if (isSelected) {
-                // Remove this slot
-                return prev.filter(
-                  (e) => !(e.key === event.key && e.timeSlot === "morning")
-                );
-              } else {
-                // Remove any existing slot for this event, then add morning
-                const filtered = prev.filter((e) => e.key !== event.key);
-                return [...filtered, { ...event, timeSlot: "morning" }];
-              }
-            })
-          }
-        >
-          Morning
-        </Button>
-        <Button
-          color="primary"
-          variant={
-            selectedEvent.some(
-              (e) => e.key === event.key && e.timeSlot === "afternoon"
-            )
-              ? "solid"
-              : "dashed"
-          }
-          title="Afternoon Time : 12:00 - 18:00"
-          onClick={() =>
-            setSelectedEvent((prev: EventItem[]) => {
-              const isSelected = prev.some(
+              )
+                ? 1
+                : 0.5,
+            }}
+          >
+            Morning
+          </Button>
+          <Button
+            color="cyan"
+            variant={"solid"}
+            style={{
+              opacity: selectedEvent.some(
                 (e) => e.key === event.key && e.timeSlot === "afternoon"
-              );
-              if (isSelected) {
-                // Remove this slot
-                return prev.filter(
-                  (e) => !(e.key === event.key && e.timeSlot === "afternoon")
+              )
+                ? 1
+                : 0.5,
+            }}
+            title="Afternoon Time : 12:00 - 18:00"
+            onClick={() =>
+              setSelectedEvent((prev: EventItem[]) => {
+                const isSelected = prev.some(
+                  (e) => e.key === event.key && e.timeSlot === "afternoon"
                 );
-              } else {
-                // Remove any existing slot for this event, then add afternoon
-                const filtered = prev.filter((e) => e.key !== event.key);
-                return [...filtered, { ...event, timeSlot: "afternoon" }];
-              }
-            })
-          }
-        >
-          Afternoon
-        </Button>
-      </Space>
+                if (isSelected) {
+                  // Remove this slot
+                  return prev.filter(
+                    (e) => !(e.key === event.key && e.timeSlot === "afternoon")
+                  );
+                } else {
+                  // Remove any existing slot for this event, then add afternoon
+                  const filtered = prev.filter((e) => e.key !== event.key);
+                  return [...filtered, { ...event, timeSlot: "afternoon" }];
+                }
+              })
+            }
+          >
+            Afternoon
+          </Button>
+        </Space>
+      </Flex>
     </Card>
   );
 }
