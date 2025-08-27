@@ -125,7 +125,7 @@ export default function Calendar() {
       <div
         style={{
           backgroundColor,
-          color: isToday  ?  "#35B6FF": textColor,
+          color: isToday ? "#35B6FF" : textColor,
           padding: "2px 4px",
           borderRadius: "3px",
           display: "flex",
@@ -285,7 +285,6 @@ export default function Calendar() {
   }, [allEvents, saveEventsToLocalStorage]);
 
   const handleEventReceive = (info: FullCalendarEventInfo) => {
-  
     // Check if the event has time information from the dragged button
     const timeSlot = info.event.extendedProps?.timeSlot;
     const startTime = info.event.extendedProps?.startTime;
@@ -797,43 +796,51 @@ export default function Calendar() {
 
   const EventDetailModal = (
     <Modal
-      title="Event Details"
+      title="Appointment Details"
       open={eventDetailModal}
       onCancel={() => setEventDetailModal(false)}
       footer={[
-        <Button
-          key="edit"
-          onClick={() => {
-            setEditingEvent(selectedEvent);
-            setEventDetailModal(false);
-            setEventEditModal(true);
-          }}
-          icon={<EditOutlined />}
-        >
-          Edit Event
-        </Button>,
+        // <Button
+        //   key="edit"
+        //   onClick={() => {
+        //     setEditingEvent(selectedEvent);
+        //     setEventDetailModal(false);
+        //     setEventEditModal(true);
+        //   }}
+        //   icon={<EditOutlined />}
+        // >
+        //   Edit Event
+        // </Button>,
+        // <Button
+        //   key="see-more"
+        //   onClick={() => setEventDetailModal(false)}
+        //   color="default"
+        //   variant="dashed"
+        // >
+        //   <LinkOutlined /> See More
+        // </Button>,
+        // <Button
+        //   key="Remove"
+        //   onClick={() => {
+        //     if (selectedEvent) {
+        //       handleEventRemove(selectedEvent.id);
+        //     }
+        //   }}
+        //   color="danger"
+        //   variant="dashed"
+        // >
+        //   <CloseCircleOutlined /> Remove
+        // </Button>,
+        // <Button key="close" onClick={() => setEventDetailModal(false)}>
+        //   Close
+        // </Button>,
+
         <Button
           key="see-more"
           onClick={() => setEventDetailModal(false)}
-          color="default"
-          variant="dashed"
+          type="primary"
         >
-          <LinkOutlined /> See More
-        </Button>,
-        <Button
-          key="Remove"
-          onClick={() => {
-            if (selectedEvent) {
-              handleEventRemove(selectedEvent.id);
-            }
-          }}
-          color="danger"
-          variant="dashed"
-        >
-          <CloseCircleOutlined /> Remove
-        </Button>,
-        <Button key="close" onClick={() => setEventDetailModal(false)}>
-          Close
+          More Detail
         </Button>,
       ]}
       width={600}
@@ -841,25 +848,53 @@ export default function Calendar() {
       {selectedEvent && (
         <Space direction="vertical" style={{ width: "100%" }}>
           <div>
-            <strong>Title:</strong> {selectedEvent.title}
+            <Row>
+              <Col span={8}>
+                <strong>Request No.:</strong>
+              </Col>
+
+              <Col span={16}>2025-G2N-1786</Col>
+            </Row>
           </div>
 
           <div>
+            <Row>
+              <Col span={8}>
+                <strong>Title:</strong>
+              </Col>
+              <Col span={16}>{selectedEvent.title}</Col>
+            </Row>
+          </div>
+
+          {/* <div>
             <strong>User :</strong>{" "}
             {userEvents.find((user) => user.userId === selectedEvent.userId)
               ?.title || "All Users"}
-          </div>
+          </div> */}
           <div>
-            <strong>Start:</strong>{" "}
-            {dayjs(selectedEvent.start).format("YYYY-MM-DD HH:mm")}
+            <Row>
+              <Col span={8}>
+                <strong>Appointment Date:</strong>{" "}
+              </Col>
+              <Col span={16}>
+                {" "}
+                {dayjs(selectedEvent.start).format("YYYY-MM-DD HH:mm")}{" "}
+                {selectedEvent.end && (
+                  <span>
+                    {" "}
+                    - {dayjs(selectedEvent.end).format("YYYY-MM-DD HH:mm")}
+                  </span>
+                )}
+              </Col>
+            </Row>
           </div>
-          {selectedEvent.end && (
+          {/* {selectedEvent.end && (
             <div>
               <strong>End:</strong>{" "}
               {dayjs(selectedEvent.end).format("YYYY-MM-DD HH:mm")}
             </div>
-          )}
-          <div>
+          )} */}
+          {/* <div>
             <strong>Duration:</strong>{" "}
             {selectedEvent.end
               ? `${dayjs(selectedEvent.end).diff(
@@ -868,8 +903,8 @@ export default function Calendar() {
                   true
                 )} hours`
               : "All day"}
-          </div>
-          <div>
+          </div> */}
+          {/* <div>
             <strong>Description:</strong>
             <div
               style={{
@@ -896,9 +931,9 @@ export default function Calendar() {
                 selectedEvent.title
               )}
             </div>
-          </div>
+          </div> */}
 
-          <div
+          {/* <div
             style={{
               marginTop: "16px",
               padding: "8px",
@@ -910,7 +945,7 @@ export default function Calendar() {
           >
             <strong>Keyboard Shortcuts:</strong> Delete key to remove event, Esc
             to close modal
-          </div>
+          </div> */}
         </Space>
       )}
     </Modal>

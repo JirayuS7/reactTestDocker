@@ -38,7 +38,8 @@ a { color: #111;}
 
 body {
   background-color: #ececec;
-  font-family: "DB Heavent"
+  font-family: "DB Heavent";
+  background:  url("assets/bg-calendar.jpg") no-repeat center center fixed;
 }
 
 .card {

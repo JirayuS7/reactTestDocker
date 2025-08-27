@@ -288,7 +288,7 @@ function eventCard(
             color="primary"
             variant={"solid"}
             title="Morning Time : 06:00 - 12:00"
-            onClick={() =>
+            onClick={() => { 
               setSelectedEvent((prev: EventItem[]) => {
                 const isSelected = prev.some(
                   (e) => e.key === event.key && e.timeSlot === "morning"
@@ -303,7 +303,12 @@ function eventCard(
                   const filtered = prev.filter((e) => e.key !== event.key);
                   return [...filtered, { ...event, timeSlot: "morning" }];
                 }
-              })
+              }) 
+            
+                setSelectedUser([...(selectedUser ?? []), event.userId]);
+            }
+
+              
             }
             style={{
               opacity: selectedEvent.some(
@@ -326,7 +331,7 @@ function eventCard(
                 : 0.5,
             }}
             title="Afternoon Time : 12:00 - 18:00"
-            onClick={() =>
+            onClick={() => {  
               setSelectedEvent((prev: EventItem[]) => {
                 const isSelected = prev.some(
                   (e) => e.key === event.key && e.timeSlot === "afternoon"
@@ -341,8 +346,11 @@ function eventCard(
                   const filtered = prev.filter((e) => e.key !== event.key);
                   return [...filtered, { ...event, timeSlot: "afternoon" }];
                 }
-              })
-            }
+              })  
+               setSelectedUser([...(selectedUser ?? []), event.userId]);
+            } 
+            
+          }
           >
             Afternoon
           </Button>
