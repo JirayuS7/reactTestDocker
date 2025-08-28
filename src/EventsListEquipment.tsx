@@ -1,4 +1,4 @@
-import {   Space } from "antd";
+import {   Flex    } from "antd";
 import { useEffect, useState } from "react";
 
 export default function EventsListEquipment() {
@@ -66,7 +66,7 @@ export default function EventsListEquipment() {
 
   return (
     <div className="events-list-equipment">
-      <Space align="center" className="button-group">
+      <Flex align="center" className="button-group" justify="center">
         <button
           className="btn btn-large"
           style={{
@@ -85,7 +85,7 @@ export default function EventsListEquipment() {
         >
           Unschedule
         </button>
-      </Space>
+      </Flex>
    
         <ul>
           {lists.map((event) => (

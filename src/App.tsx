@@ -1,9 +1,9 @@
 import { useEffect    } from "react";
 import "./App.css";
-import Calendar from "./Celendar";
 import ApiTest from "./ApiTest";
 import { Tabs, Alert, Space } from "antd";
 import { apiClient, getEnvironmentInfo } from "./utils/api";
+import EventDetail from "./EventDetail";
 
  
 
@@ -65,7 +65,7 @@ function App() {
           {
             key: "4",
             label: "Calendar",
-            children: <Calendar />,
+            children: <EventDetail />,
           },
         ]}
       />

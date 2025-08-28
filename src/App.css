@@ -1,45 +1,11 @@
-#root {
-  max-width: 1400px;
- width: 100%;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-a { color: #111;}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+a {
+  color: #111;
 }
 
 body {
   background-color: #ececec;
   font-family: "DB Heavent";
-  background:  url("assets/bg-calendar.jpg") no-repeat center center fixed;
+  background: url("assets/bg-calendar.jpg") no-repeat center center fixed;
 }
 
 .card {
@@ -50,16 +16,21 @@ body {
   color: #888;
 }
 
-
 .fc .fc-multimonth-multicol .fc-daygrid-more-link {
   background: #3788d8;
   color: #fff;
 }
 
-.fc-multimonth-header  {text-align: center;}
-.fc .fc-multimonth-title {  display: inline-block;  }
+.fc-multimonth-header {
+  text-align: center;
+}
+.fc .fc-multimonth-title {
+  display: inline-block;
+}
 
- .fc-multimonth-title a { float: right;}
+.fc-multimonth-title a {
+  float: right;
+}
 
 .event-count {
   font-size: 0.8em;
@@ -67,17 +38,20 @@ body {
   margin-left: 0rem;
   float: right;
   position: relative;
-  top:-5px;
-
+  top: -5px;
 }
 
-.fc-multimonth-title * {  display: none;}
-.fc-multimonth-title span{
+.fc-multimonth-title * {
+  display: none;
+}
+.fc-multimonth-title span {
   display: inline-block;
 }
 
 .fc-more-link {
   text-align: center;
-} 
+}
 
-.ant-card-head-title { text-align: left;}
+.ant-card-head-title {
+  text-align: left;
+}

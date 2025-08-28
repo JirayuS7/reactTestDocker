@@ -7,12 +7,15 @@ import {
   DatePicker,
   Flex,
   Checkbox,
+  Row,
+  Col,
 } from "antd";
 import type { Dayjs } from "dayjs";
 
 import { useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { checkLimitEvent } from "./services/checkLimitEvent";
+import type { CheckboxChangeEvent } from "antd/es/checkbox";
 export interface EventItem {
   key: string;
   title: string;
@@ -48,6 +51,7 @@ export default function EventsListRadio({
 
   //  form
   const [selectedEvent, setSelectedEvent] = useState<EventItem[]>([]);
+  const [activeSelect, setActiveSelect] = useState<boolean>(false);
 
   // Modal state for date range selection
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -145,7 +149,13 @@ export default function EventsListRadio({
       {ModalWarning}
       <h3>Inspector Name </h3>
 
-      <Space direction="vertical">
+      <Flex
+        align="center"
+        gap={10}
+        className="button-group"
+        justify="center"
+        vertical={true}
+      >
         {events &&
           events.map((event) =>
             eventCard(
@@ -153,10 +163,12 @@ export default function EventsListRadio({
               selectedUser,
               setSelectedUser,
               setSelectedEvent,
-              selectedEvent
+              selectedEvent,
+              activeSelect,
+              setActiveSelect
             )
           )}
-      </Space>
+      </Flex>
 
       {events.length == 0 && <p>No events available</p>}
 
@@ -237,125 +249,148 @@ function eventCard(
   selectedUser: number[] | null,
   setSelectedUser: (user: number[] | null) => void,
   setSelectedEvent: Dispatch<SetStateAction<EventItem[]>>,
-  selectedEvent: EventItem[]
+  selectedEvent: EventItem[],
+  activeSelect: boolean,
+  setActiveSelect: (active: boolean) => void
 ) {
-  const active = selectedUser?.includes(event.userId);
+  const active = selectedUser?.includes(event.userId) && activeSelect;
+
+  function ChangeUser(e: CheckboxChangeEvent) {
+    if (e.target.checked) {
+      // Add userId if not already present
+      if (!selectedUser?.includes(event.userId)) {
+        setSelectedUser([...(selectedUser ?? []), event.userId]);
+      }
+    } else {
+      // Remove userId when unchecked
+      setSelectedUser((selectedUser ?? []).filter((id) => id !== event.userId));
+    }
+  }
 
   return (
     <Card
       key={event.key}
-      className={` ${active ? "selectedCard" : ""}`}
+      className={` ${active ? "selectedCard w-100" : "w-100"}`}
       size="small"
+      onClick={() => {
+        if (!activeSelect) {
+          setActiveSelect(true);
+          setSelectedUser([event.userId]);
+        }
+      }}
     >
-      <Flex>
-        <div className="event-card-info">
-          {" "}
-          <div>
+      <Row gutter={8} align="middle">
+        <Col span={15}>
+          <div className="event-card-info">
+            {" "}
             <div>
-              {" "}
-              <Checkbox
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    // Add userId if not already present
-                    if (!selectedUser?.includes(event.userId)) {
-                      setSelectedUser([...(selectedUser ?? []), event.userId]);
-                    }
-                  } else {
-                    // Remove userId when unchecked
-                    setSelectedUser(
-                      (selectedUser ?? []).filter((id) => id !== event.userId)
-                    );
-                  }
-                }}
-                checked={selectedUser?.includes(event.userId)}
-              >
+              <div>
                 {" "}
-                <strong> Name :</strong>{" "}
-                <span style={{ marginLeft: "8px" }}> {event.title} </span>
-              </Checkbox>
-            </div>
-            <div
+                {activeSelect ? (
+                  <Checkbox
+                    onChange={(e) => {
+                      ChangeUser(e);
+                    }}
+                    checked={selectedUser?.includes(event.userId)}
+                  >
+                    {" "}
+                    <strong> Name :</strong>{" "}
+                    <span style={{ marginLeft: "8px" }}> {event.title} </span>
+                  </Checkbox>
+                ) : (
+                  <div>
+                    <strong style={{ marginLeft: 28 }}> Name :</strong>{" "}
+                    <span style={{ marginLeft: "8px" }}> {event.title} </span>
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  marginLeft: 27,
+                  display: "flex",
+                }}
+              >
+                <strong> Email :</strong>{" "}
+                <span className="wrapText" style={{ marginLeft: "8px" }}>
+                  {" "}
+                  zAdsawamateI@pttep.com
+                </span>
+              </div>
+            </div>{" "}
+          </div>
+        </Col>
+
+        <Col span={9}>
+          <Flex className="action-buttons" align="center" justify="end" gap={8}>
+            <Button
+              color="primary"
+              variant={"solid"}
+              title="Morning Time : 06:00 - 12:00"
+              onClick={() => {
+                setSelectedEvent((prev: EventItem[]) => {
+                  const isSelected = prev.some(
+                    (e) => e.key === event.key && e.timeSlot === "morning"
+                  );
+                  if (isSelected) {
+                    // Remove this slot
+                    return prev.filter(
+                      (e) => !(e.key === event.key && e.timeSlot === "morning")
+                    );
+                  } else {
+                    // Remove any existing slot for this event, then add morning
+                    const filtered = prev.filter((e) => e.key !== event.key);
+                    return [...filtered, { ...event, timeSlot: "morning" }];
+                  }
+                });
+
+                setSelectedUser([...(selectedUser ?? []), event.userId]);
+              }}
               style={{
-                marginLeft: 27,
+                opacity: selectedEvent.some(
+                  (e) => e.key === event.key && e.timeSlot === "morning"
+                )
+                  ? 1
+                  : 0.5,
               }}
             >
-              <strong> Email :</strong> <span> zAdsawamateI@pttep.com</span>
-            </div>
-          </div>{" "}
-        </div>
-        <Space>
-          <Button
-            color="primary"
-            variant={"solid"}
-            title="Morning Time : 06:00 - 12:00"
-            onClick={() => { 
-              setSelectedEvent((prev: EventItem[]) => {
-                const isSelected = prev.some(
-                  (e) => e.key === event.key && e.timeSlot === "morning"
-                );
-                if (isSelected) {
-                  // Remove this slot
-                  return prev.filter(
-                    (e) => !(e.key === event.key && e.timeSlot === "morning")
-                  );
-                } else {
-                  // Remove any existing slot for this event, then add morning
-                  const filtered = prev.filter((e) => e.key !== event.key);
-                  return [...filtered, { ...event, timeSlot: "morning" }];
-                }
-              }) 
-            
-                setSelectedUser([...(selectedUser ?? []), event.userId]);
-            }
-
-              
-            }
-            style={{
-              opacity: selectedEvent.some(
-                (e) => e.key === event.key && e.timeSlot === "morning"
-              )
-                ? 1
-                : 0.5,
-            }}
-          >
-            Morning
-          </Button>
-          <Button
-            color="cyan"
-            variant={"solid"}
-            style={{
-              opacity: selectedEvent.some(
-                (e) => e.key === event.key && e.timeSlot === "afternoon"
-              )
-                ? 1
-                : 0.5,
-            }}
-            title="Afternoon Time : 12:00 - 18:00"
-            onClick={() => {  
-              setSelectedEvent((prev: EventItem[]) => {
-                const isSelected = prev.some(
+              Morning
+            </Button>
+            <Button
+              color="cyan"
+              variant={"solid"}
+              style={{
+                opacity: selectedEvent.some(
                   (e) => e.key === event.key && e.timeSlot === "afternoon"
-                );
-                if (isSelected) {
-                  // Remove this slot
-                  return prev.filter(
-                    (e) => !(e.key === event.key && e.timeSlot === "afternoon")
+                )
+                  ? 1
+                  : 0.5,
+              }}
+              title="Afternoon Time : 12:00 - 18:00"
+              onClick={() => {
+                setSelectedEvent((prev: EventItem[]) => {
+                  const isSelected = prev.some(
+                    (e) => e.key === event.key && e.timeSlot === "afternoon"
                   );
-                } else {
-                  // Remove any existing slot for this event, then add afternoon
-                  const filtered = prev.filter((e) => e.key !== event.key);
-                  return [...filtered, { ...event, timeSlot: "afternoon" }];
-                }
-              })  
-               setSelectedUser([...(selectedUser ?? []), event.userId]);
-            } 
-            
-          }
-          >
-            Afternoon
-          </Button>
-        </Space>
-      </Flex>
+                  if (isSelected) {
+                    // Remove this slot
+                    return prev.filter(
+                      (e) =>
+                        !(e.key === event.key && e.timeSlot === "afternoon")
+                    );
+                  } else {
+                    // Remove any existing slot for this event, then add afternoon
+                    const filtered = prev.filter((e) => e.key !== event.key);
+                    return [...filtered, { ...event, timeSlot: "afternoon" }];
+                  }
+                });
+                setSelectedUser([...(selectedUser ?? []), event.userId]);
+              }}
+            >
+              Afternoon
+            </Button>
+          </Flex>
+        </Col>
+      </Row>
     </Card>
   );
 }

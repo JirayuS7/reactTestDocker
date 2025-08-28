@@ -7,8 +7,7 @@ import {
   CloseCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-// import interactionPlugin from "@fullcalendar/interaction";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, use } from "react";
 import {
   Button,
   Col,
@@ -23,8 +22,8 @@ import {
   message,
   Card,
   Flex,
+  Popover,
 } from "antd";
-import { LinkOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import interactionPlugin from "@fullcalendar/interaction";
@@ -965,6 +964,11 @@ export default function Calendar() {
     });
   };
 
+  // Popover content for events
+  // const [popOverEvents, setPopOverEvents] = useState<CalendarEvent[] | null>(
+  //   null
+  // );
+
   return (
     <div>
       {contextHolder}
@@ -974,12 +978,7 @@ export default function Calendar() {
       {/* {ModalConfirm}{" "} */}
       <h2 className="calendar-header"> Schedule</h2>
 
-      <Row
-        gutter={[16, 16]}
-        style={{
-          marginTop: 30,
-        }}
-      >
+      <Row gutter={20}>
         <Col span={16}>
           <Card>
             <div className="eventStatus">
@@ -1047,14 +1046,6 @@ export default function Calendar() {
                     right:
                       "multiMonthYear,dayGridMonth,timeGridWeek,timeGridDay",
                   }}
-                  // customButtons={{
-                  //   dotToggle: {
-                  //     text: isDotView ? "Show Titles" : "Show Dots",
-                  //     click: () => setIsDotView(!isDotView),
-                  //   },
-                  // }}
-
-                  // eventContent={renderEventWithTooltip} // Apply custom rendering
                   views={{
                     timeGridDay: {
                       type: "timeGrid",
@@ -1091,10 +1082,13 @@ export default function Calendar() {
                       buttonText: "Year",
                       allDaySlot: false,
                       eventClassNames: "day-event-title",
+                      eventMaxStack: 3,
+
                       // dayCount: 365,
                       multiMonthTitleFormat: {
                         month: "long",
                       },
+                      dayMaxEventRows: 3,
 
                       // Display events as dots in year view based on toggle
                       eventDisplay: isDotView ? "dot" : "block",
@@ -1178,6 +1172,9 @@ export default function Calendar() {
                     // Handle external event drop
                     console.log("Dropped event:", info);
                   }}
+                  eventDidMount={() => {
+                    console.log("Event mounted");
+                  }}
                 />
               </div>
             </div>
@@ -1204,26 +1201,6 @@ export default function Calendar() {
                 Save
               </Button>
             </Flex>
-
-            {/* <Space style={{ marginTop: 16 }} align="center" wrap>
-              <Button
-                type="primary"
-                onClick={() => {
-                  saveEventsToLocalStorage(allEvents);
-                  openNotification();
-                }}
-              >
-               Save
-              </Button>
-              <Button onClick={resetEventsToOriginal} danger>
-                Reset to Original
-              </Button>
-
-              <div style={{ marginLeft: 16, color: "#666" }}>
-                Total Events: {allEvents.length} | Filtered: {eventsList.length}{" "}
-                | Saved: {localStorage.getItem("calendarEvents") ? "Yes" : "No"}
-              </div>
-            </Space> */}
           </Card>
         </Col>{" "}
         <Col span={8}>
@@ -1239,7 +1216,6 @@ export default function Calendar() {
           />
 
           <EventsListEquipment />
-          {/* <UserLists /> */}
         </Col>
       </Row>
     </div>

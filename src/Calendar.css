@@ -548,7 +548,8 @@
 }
 
 .events-list-equipment .button-group {
-  margin: 1rem 0;
+  margin: 1rem auto;
+  text-align: center;
 }
 
 /*  Event Inspector Name  */
@@ -565,8 +566,32 @@
   display: inline-flex;
 }
 
-
 /*  */
-.ant-modal-header    { padding: 0.5rem 0 !important;}
+/* .ant-modal-header {
+  padding: 0.5rem 0 !important;
+}
 
-.ant-modal-body{ border-bottom: 1px solid #F0F0F0 ; border-top: 1px solid #F0F0F0; padding: 1rem 0 !important;}
+.ant-modal-body {
+  border-bottom: 1px solid #f0f0f0;
+  border-top: 1px solid #f0f0f0;
+  padding: 1rem 0 !important;
+} */
+
+.w-100 {
+  width: 100% !important;
+}
+
+.calendar-modal .ant-modal-content {
+  background: url("assets/bg-calendar.jpg") no-repeat center center fixed;
+  background-size: cover;
+}
+
+.wrapText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+
+.action-buttons button { padding-left: 0.5rem; padding-right: 0.5rem; text-align: right;}
