@@ -1215,7 +1215,7 @@ export default function Calendar() {
             onNavigateToDate={handleDateClick}
           />
 
-          <EventsListEquipment />
+          <EventsListEquipment  currentView={currentView}/>
         </Col>
       </Row>
     </div>

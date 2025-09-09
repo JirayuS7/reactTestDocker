@@ -1,49 +1,63 @@
 import {   Flex    } from "antd";
 import { useEffect, useState } from "react";
 
-export default function EventsListEquipment() {
+export default function EventsListEquipment({ currentView }: { currentView: string }) {
   const listsMockUp = [
     {
       id: 1,
       date: "2023-09-01",
       title: "PLCPP2-PK1530 Turbo-Expander Preparation",
       color: "#7AB800",
+      type : 1,
+      view :  "dayGridMonth"
     },
     {
       id: 2,
       date: "2023-09-02",
       title: "PLCPP2-PK1530 Turbo-Expander Testing",
       color: "#7AB800",
+      type : 1,
+      view :  "dayGridMonth"
     },
     {
       id: 3,
       date: "2023-09-03",
       title: "PLCPP2-PK1530 Turbo-Expander Maintenance",
       color: "#FEBC2F",
+      type : 1,
+      view :  "dayGridMonth"
     },
     {
       id: 4,
       date: "2023-09-04",
       title: "PLCPP2-PK1530 Turbo-Expander Decommissioning",
       color: "#FEBC2F",
+      type : 2,
+      view :  "timeGridDay"
     },
     {
       id: 5,
       date: "2023-09-05",
       title: "PLCPP2-PK1530 Turbo-Expander Inspection",
-      color: "#7E7E88",
+      color: "#FEBC2F",
+      type : 2,
+       view :  "multiMonthYear"
     },
     {
       id: 6,
       date: "2023-09-06",
       title: "PLCPP2-PK1530 Turbo-Expander Testing",
-      color: "#7E7E88",
+      color:  "#FEBC2F",
+        type : 2,
+       view :  "multiMonthYear"
     },
     {
       id: 7,
       date: "2023-09-06",
       title: "PLCPP2-PK1530 Turbo-Expander Testing",
-      color: "#7E7E88",
+      color: "#FEBC2F",
+      type : 2,
+       view :  "timeGridWeek"
     },
   ];
 
@@ -56,13 +70,21 @@ export default function EventsListEquipment() {
 
     if (active === 1) {
       // Fetch or manipulate data for active schedule
-      setLists(listsMockUp);
+      setLists(listsMockUp.filter((item) => item.type === 1));
     } else if (active === 2) {
       // Fetch or manipulate data for active unschedule
       //    random
-      setLists(listsMockUp.filter((item) => item.id !== 1));
+      setLists(listsMockUp.filter((item) => item.type === 2));
     }
   }, [active]);
+
+
+
+  useEffect(() => { 
+    if (currentView) {
+      setLists(listsMockUp.filter((item) => item.view === currentView));
+    } 
+  }, [currentView]);
 
   return (
     <div className="events-list-equipment">
