@@ -5,9 +5,10 @@ import FullCalendar from "@fullcalendar/react";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  ReloadOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { useEffect, useRef, useState, useCallback  } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Button,
   Col,
@@ -26,7 +27,7 @@ import {
 import dayjs from "dayjs";
 import "./Calendar.css"; // Import the CSS file
 import interactionPlugin from "@fullcalendar/interaction";
-import EventsListRadio from "./EventsListRadio";
+import EventsListRadio, { type EventItem } from "./EventsListRadio";
 import { events } from "./eventsMokup";
 import { checkLimitEvent } from "./services/checkLimitEvent";
 import EventsListEquipment from "./EventsListEquipment";
@@ -39,6 +40,7 @@ export interface CalendarEvent {
   color?: string;
   userId: number;
   key?: string;
+  status: "Success" | "Pending" | "Cancelled" | "";
 }
 
 interface FullCalendarEventInfo {
@@ -55,6 +57,8 @@ interface FullCalendarEventInfo {
       startTime?: string;
       endTime?: string;
       [key: string]: unknown;
+      userId?: number;
+      status?: "Success" | "Pending" | "Cancelled" | "";
     };
     remove: () => void;
   };
@@ -72,6 +76,7 @@ export default function Calendar() {
 
   const [isDotView] = useState(true); // New state for dot view toggle
   const [currentView, setCurrentView] = useState("dayGridMonth"); // Track current view
+  const [status, setStatus] = useState<string>("All");
   const [eventLimitModal, setEventLimitModal] = useState(false);
   const [limitWarningInfo, setLimitWarningInfo] = useState<{
     date: string;
@@ -152,6 +157,131 @@ export default function Calendar() {
     );
   };
 
+  // Add this function before your return statement
+  // const renderEventContent = (eventInfo: any) => {
+  //   const { event } = eventInfo;
+
+  //   console.log("🚀 ~ renderEventContent ~ event:", event)
+
+  //   const status = event?._def?.extendedProps?.status;
+
+  //   const startDate = event?._instance?.range.start;
+  //   const endDate = event?._instance?.range.end;
+
+  //   // AM = green, PM = blue, Evening = red
+  //   const colorByTime =
+  //     startDate && endDate
+  //       ? startDate.getHours() < 12
+  //         ? "green"
+  //         : startDate.getHours() >= 12 && startDate.getHours() < 18
+  //         ? "blue"
+  //         : "green"
+  //       : "gray";
+
+  //   // Get user information
+  //   const user = userEvents.find(
+  //     (u) => u.userId === event.extendedProps.userId
+  //   );
+
+  //   // Customize based on month view
+  //   if (eventInfo.view.type === "dayGridMonth") {
+  //     return (
+  //       <div
+  //         style={{
+  //           padding: "2px 4px",
+  //           fontSize: "11px",
+  //           lineHeight: "1.2",
+  //           overflow: "hidden",
+  //           textOverflow: "ellipsis",
+  //           whiteSpace: "nowrap",
+  //           backgroundColor:
+  //             status === "Success"
+  //               ? "#87EFAC"
+  //               : status === "Pending"
+  //               ? "#FDD34D"
+  //               : status === "Cancelled"
+  //               ? "#D2D6DB"
+  //               : "#D2D6DB",
+  //         }}
+  //       >
+  //         {/* Custom bullet point */}
+  //         <span
+  //           style={{
+  //             display: "inline-block",
+  //             width: "9px",
+
+  //             height: "9px",
+  //             borderRadius: "50%",
+  //             backgroundColor: colorByTime || "#3788d8",
+  //             marginRight: "4px",
+  //           }}
+  //         />
+
+  //         {/* Time display */}
+  //         {event.start && (
+  //           <span style={{ fontWeight: "bold", color: "#666" }}>
+  //             {dayjs(event.start).format("HH:mm")}
+  //           </span>
+  //         )}
+
+  //         {/* Event title (truncated) */}
+  //         <span style={{ marginLeft: "4px" }}>
+  //           {event.title.length > 25
+  //             ? `${event.title.substring(0, 25)}...`
+  //             : event.title}
+  //         </span>
+
+  //         {/* User indicator */}
+  //         {user && (
+  //           <span
+  //             style={{
+  //               fontSize: "12px",
+  //               color: "#000000",
+  //               marginLeft: "4px",
+  //             }}
+  //           >
+  //             ({user.title.split(" ")[0]})
+  //           </span>
+  //         )}
+  //       </div>
+  //     );
+  //   } else if (eventInfo.view.type === "multiMonthYear") {
+
+  //     //  if event count > 2 make more button
+  //     console.log(eventInfo.eventCount,"eventInfo.eventCount")
+  //     if (eventInfo.eventCount > 2) {
+  //       return (
+  //         <button
+  //           style={{
+  //             padding: "2px 4px",
+  //             fontSize: "12px",
+  //             backgroundColor: "#f0f0f0",
+  //             border: "none",
+  //             borderRadius: "3px",
+  //             cursor: "pointer",
+  //           }}
+  //           onClick={() => {
+  //             // Handle "more" button click
+  //           }}
+  //         >
+  //           More
+  //         </button>
+  //       );
+  //     }
+  //   }
+
+  //   // Default rendering for other views
+  //   const renderEvent = (event: CalendarEvent) => {
+  //     return (
+  //       <div>
+  //         <b>{dayjs(event.start).format("HH:mm")}</b>
+  //         <i>{event.title}</i>
+  //       </div>
+  //     );
+  //   };
+  //   return renderEvent(event);
+  // };
+
   // Store the original/full events list separately from filtered view
   const [allEvents, setAllEvents] = useState(() => {
     const savedEvents = localStorage.getItem("calendarEvents");
@@ -165,11 +295,13 @@ export default function Calendar() {
           end?: Date | string;
           color?: string;
           key?: string;
+          status: "Success" | "Pending" | "Cancelled" | "";
         }
         return parsedEvents.map((event: CalendarEvent) => ({
           ...event,
           start: new Date(event.start),
           end: event.end ? new Date(event.end) : undefined,
+          status: event.status || "",
         }));
       } catch (error) {
         console.error("Error parsing saved events:", error);
@@ -223,18 +355,31 @@ export default function Calendar() {
   ]);
 
   const [selectedUser, setSelectedUser] = useState<number[] | null>([]);
-
+  console.log("🚀 ~ selectedUser:", selectedUser);
+  const [eventDetail, setEventDetail] = useState({
+    title: "",
+    start: new Date(),
+    end: new Date(),
+    id: "",
+    color: "",
+    key: "",
+    userId: 0,
+  });
   const [eventDetailModal, setEventDetailModal] = useState(false);
   const [eventEditModal, setEventEditModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<{
-    title: string;
-    start: Date;
-    end?: Date;
-    id: string;
-    color?: string;
-    key?: string;
-    userId?: number;
-  } | null>(null);
+  // const [selectedEvent, setSelectedEvent] = useState<{
+  //   title: string;
+  //   start: Date;
+  //   end?: Date;
+  //   id: string;
+  //   color?: string;
+  //   key?: string;
+  //   userId?: number;
+  // } | null>(null);
+
+  const [selectedEvent, setSelectedEvent] = useState<EventItem[]>([]);
+  console.log("🚀 ~ selectedEvent:", selectedEvent);
+
   const [editingEvent, setEditingEvent] = useState<{
     title: string;
     start: Date;
@@ -339,7 +484,8 @@ export default function Calendar() {
         start: startDate,
         end: endDate,
         color: color,
-        userId: 1, // Default userId for dropped events
+        userId: 1, // Default userId for dropped events,
+        key: info.event.id,
       };
 
       // check Duplicate
@@ -398,6 +544,7 @@ export default function Calendar() {
         color?: string;
         key?: string;
         userId: number;
+        status: "Success" | "Pending" | "Cancelled" | "";
       }
 
       const selectedUserEvents: CalendarEvent[] = allEvents.filter(
@@ -426,6 +573,7 @@ export default function Calendar() {
         typeof info.event.extendedProps.userId === "number"
           ? info.event.extendedProps.userId
           : 1,
+      status: info.event.extendedProps.status || "",
     };
 
     // Update allEvents
@@ -468,7 +616,7 @@ export default function Calendar() {
       // Close modals
       setEventEditModal(false);
       setEventDetailModal(false);
-      setSelectedEvent(null);
+      setSelectedEvent([]);
 
       // Show success message
       message.success("Event removed successfully");
@@ -482,7 +630,7 @@ export default function Calendar() {
       // Delete key to remove selected event
       if (event.key === "Delete" && selectedEvent && eventDetailModal) {
         event.preventDefault();
-        handleEventRemove(selectedEvent.id);
+        // handleEventRemove(selectedEvent.id);
       }
       // Escape key to close modal
       if (event.key === "Escape" && eventDetailModal) {
@@ -492,7 +640,7 @@ export default function Calendar() {
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [selectedEvent, eventDetailModal, handleEventRemove]);
+  }, [eventDetailModal, handleEventRemove]);
 
   // Handle manual event editing through form
   interface EventEditFormValues {
@@ -622,12 +770,12 @@ export default function Calendar() {
     });
   };
 
-  const handleDateClick = (date: Date) => {
-    const calendarApi = calendarRef.current?.getApi();
-    if (calendarApi) {
-      calendarApi.changeView("dayGridMonth", date);
-    }
-  };
+  // const handleDateClick = (date: Date) => {
+  //   const calendarApi = calendarRef.current?.getApi();
+  //   if (calendarApi) {
+  //     calendarApi.changeView("dayGridMonth", date);
+  //   }
+  // };
 
   const EventLimitModal = (
     <Modal
@@ -843,7 +991,7 @@ export default function Calendar() {
       ]}
       width={600}
     >
-      {selectedEvent && (
+      {eventDetail && (
         <Space direction="vertical" style={{ width: "100%" }}>
           <div>
             <Row>
@@ -860,7 +1008,7 @@ export default function Calendar() {
               <Col span={8}>
                 <strong>Title:</strong>
               </Col>
-              <Col span={16}>{selectedEvent.title}</Col>
+              <Col span={16}>{eventDetail.title}</Col>
             </Row>
           </div>
 
@@ -876,11 +1024,11 @@ export default function Calendar() {
               </Col>
               <Col span={16}>
                 {" "}
-                {dayjs(selectedEvent.start).format("YYYY-MM-DD HH:mm")}{" "}
-                {selectedEvent.end && (
+                {dayjs(eventDetail.start).format("YYYY-MM-DD HH:mm")}{" "}
+                {eventDetail.end && (
                   <span>
                     {" "}
-                    - {dayjs(selectedEvent.end).format("YYYY-MM-DD HH:mm")}
+                    - {dayjs(eventDetail.end).format("YYYY-MM-DD HH:mm")}
                   </span>
                 )}
               </Col>
@@ -968,6 +1116,71 @@ export default function Calendar() {
   //   null
   // );
 
+  // Add this function before your return statement
+  const handleDateClick = (dateClickInfo: any) => {
+    if (selectedEvent === null || selectedEvent.length === 0) {
+      return;
+    }
+
+    const clickedDate = dateClickInfo.date;
+
+    // Check if the date already has the maximum number of events
+    const eventsOnDate = countEventsOnDate(clickedDate, allEvents);
+    if (eventsOnDate >= MAX_EVENTS_PER_DATE) {
+      setLimitWarningInfo({
+        date: dayjs(clickedDate).format("YYYY-MM-DD"),
+        eventCount: eventsOnDate,
+      });
+      setEventLimitModal(true);
+      return;
+    }
+
+    // Create a new event with default values
+    const newEvent: CalendarEvent[] = [];
+
+    for (const event of selectedEvent) {
+      newEvent.push({
+        id: `event-${Date.now()}-${event.userId}`,
+        title: "New Appointment",
+        start: clickedDate,
+        end: undefined,
+        color: "#7E7E88", // Default color for new events
+        userId: event.userId,
+        key: `event-${Date.now()}-${event.userId}`,
+        status: "",
+      });
+    }
+
+    // Add to allEvents
+    const updatedAllEvents = [...allEvents, ...newEvent];
+    setAllEvents(updatedAllEvents);
+
+    // Update filtered events based on current user selection
+    if (selectedEvent && selectedEvent.length > 0) {
+      const filteredEvents = updatedAllEvents.filter((event) =>
+        selectedEvent.includes(event.userId)
+      );
+      setEventsList(filteredEvents);
+    } else {
+      setEventsList(updatedAllEvents);
+    }
+
+    setSelectedEvent([]);
+    // Show success message
+  };
+
+  const filterByStatus = (status: string) => {
+    if (status === "All") {
+      setEventsList(allEvents);
+    } else {
+      const filteredEvents = allEvents.filter(
+        (event: { status: string }) => event.status === status
+      );
+      setEventsList(filteredEvents);
+    }
+    setStatus(status);
+  };
+
   return (
     <div>
       {contextHolder}
@@ -981,26 +1194,57 @@ export default function Calendar() {
         <Col span={16}>
           <Card>
             <div className="eventStatus">
-              <div className="eventCircleBlock">
+              <div
+                className="eventCircleBlock"
+                style={{
+                  backgroundColor: status === "Success" ? "#e6f7ff" : "",
+                }}
+                onClick={() => filterByStatus("Success")}
+              >
                 <span
                   style={{ backgroundColor: "#7AB800" }}
                   className="eventCircle"
                 ></span>{" "}
                 งานที่เสร็จเรียบร้อยแล้ว
               </div>
-              <div className="eventCircleBlock">
+              <div
+                style={{
+                  backgroundColor: status === "Pending" ? "#e6f7ff" : "",
+                }}
+                className="eventCircleBlock"
+                onClick={() => filterByStatus("Pending")}
+              >
                 <span
                   style={{ backgroundColor: "#FFA500" }}
                   className="eventCircle"
                 ></span>{" "}
                 งานที่ยังไม่เสร็จ
               </div>
-              <div className="eventCircleBlock">
+              <div
+                style={{
+                  backgroundColor: status === "Cancelled" ? "#e6f7ff" : "",
+                }}
+                className="eventCircleBlock"
+                onClick={() => filterByStatus("Cancelled")}
+              >
                 <span
                   style={{ background: "#7E7E88" }}
                   className="eventCircle"
                 ></span>{" "}
                 งานที่ยังไม่ถึงวันเริ่มดำเนินการ
+              </div>
+
+              <div>
+                {status !== "All" && (
+                  <Button
+                    onClick={() => {
+                      setStatus("All");
+                      filterByStatus("All");
+                    }}
+                  >
+                    <ReloadOutlined /> Reset
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -1147,10 +1391,10 @@ export default function Calendar() {
                   eventClick={(info) => {
                     // Show event details modal instead of opening new page
                     if (info.event.start) {
-                      setSelectedEvent({
+                      setEventDetail({
                         title: info.event.title,
                         start: info.event.start,
-                        end: info.event.end || undefined,
+                        end: info.event.end || info.event.start,
                         userId: info.event.extendedProps.userId || 0,
                         id: info.event.id,
                         color:
@@ -1160,6 +1404,8 @@ export default function Calendar() {
                       setEventDetailModal(true);
                     }
                   }}
+                  dateClick={handleDateClick}
+                  // eventContent={renderEventContent} // Add this line
                   datesSet={updateMonthTitles} // runs on view change
                   eventAdd={updateMonthTitles} // runs when new event is added
                   eventChange={() => {}} // runs when event changes
@@ -1212,9 +1458,11 @@ export default function Calendar() {
             limitModalOpen={limitModalOpen}
             setLimitModalOpen={setLimitModalOpen}
             onNavigateToDate={handleDateClick}
+            selectedEvent={selectedEvent}
+            setSelectedEvent={setSelectedEvent}
           />
 
-          <EventsListEquipment  currentView={currentView}/>
+          <EventsListEquipment currentView={currentView} />
         </Col>
       </Row>
     </div>

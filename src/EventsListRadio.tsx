@@ -35,6 +35,8 @@ export default function EventsListRadio({
   limitModalOpen,
   setLimitModalOpen,
   onNavigateToDate,
+  selectedEvent,
+  setSelectedEvent,
 }: {
   events: EventItem[];
   selectedUser: number[] | null;
@@ -44,13 +46,15 @@ export default function EventsListRadio({
   limitModalOpen: boolean;
   setLimitModalOpen: (open: boolean) => void;
   onNavigateToDate?: (date: Date) => void;
+  selectedEvent: EventItem[];
+  setSelectedEvent: Dispatch<SetStateAction<EventItem[]>>;
 }) {
   // Modal state for event limit warning
 
   const containerRef = useRef(null);
 
   //  form
-  const [selectedEvent, setSelectedEvent] = useState<EventItem[]>([]);
+ 
   const [activeSelect, setActiveSelect] = useState<boolean>(false);
 
   // Modal state for date range selection
@@ -285,8 +289,17 @@ function eventCard(
             {" "}
             <div>
               <div>
-                {" "}
-                {activeSelect ? (
+                <Checkbox
+                    onChange={(e) => {
+                      ChangeUser(e);
+                    }}
+                    checked={selectedUser?.includes(event.userId)}
+                  >
+                    {" "}
+                    <strong> Name :</strong>{" "}
+                    <span style={{ marginLeft: "8px" }}> {event.title} </span>
+                  </Checkbox>
+                {/* {activeSelect ? (
                   <Checkbox
                     onChange={(e) => {
                       ChangeUser(e);
@@ -302,7 +315,7 @@ function eventCard(
                     <strong style={{ marginLeft: 28 }}> Name :</strong>{" "}
                     <span style={{ marginLeft: "8px" }}> {event.title} </span>
                   </div>
-                )}
+                )} */}
               </div>
               <div
                 style={{
