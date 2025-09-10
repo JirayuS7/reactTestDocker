@@ -595,3 +595,7 @@
 
 
 .action-buttons button { padding-left: 0.5rem; padding-right: 0.5rem; text-align: right;}
+
+.fc .fc-more-popover .fc-popover-body {
+  max-width: 220px;
+}

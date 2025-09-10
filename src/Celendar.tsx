@@ -158,129 +158,147 @@ export default function Calendar() {
   };
 
   // Add this function before your return statement
-  // const renderEventContent = (eventInfo: any) => {
-  //   const { event } = eventInfo;
+  const renderEventContent = (eventInfo: any) => {
+    const { event } = eventInfo;
 
-  //   console.log("🚀 ~ renderEventContent ~ event:", event)
+    const status = event?._def?.extendedProps?.status;
 
-  //   const status = event?._def?.extendedProps?.status;
+    const startDate = event?._instance?.range.start;
+    const endDate = event?._instance?.range.end;
 
-  //   const startDate = event?._instance?.range.start;
-  //   const endDate = event?._instance?.range.end;
+    // AM = green, PM = blue, Evening = red
+    const colorByTime =
+      startDate && endDate
+        ? startDate.getHours() < 12
+          ? "green"
+          : startDate.getHours() >= 12 && startDate.getHours() < 18
+          ? "blue"
+          : "green"
+        : "gray";
 
-  //   // AM = green, PM = blue, Evening = red
-  //   const colorByTime =
-  //     startDate && endDate
-  //       ? startDate.getHours() < 12
-  //         ? "green"
-  //         : startDate.getHours() >= 12 && startDate.getHours() < 18
-  //         ? "blue"
-  //         : "green"
-  //       : "gray";
+    // Get user information
+    const user = userEvents.find(
+      (u) => u.userId === event.extendedProps.userId
+    );
 
-  //   // Get user information
-  //   const user = userEvents.find(
-  //     (u) => u.userId === event.extendedProps.userId
-  //   );
+    // Customize based on month view
+    if (eventInfo.view.type === "dayGridMonth") {
+      return (
+        <div
+          style={{
+            padding: "2px 4px",
+            fontSize: "14px",
+            lineHeight: "1.2",
+            overflow: "hidden",
+            color: "#666",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            backgroundColor:
+              status === "Success"
+                ? "#87EFAC"
+                : status === "Pending"
+                ? "#FDD34D"
+                : status === "Cancelled"
+                ? "#D2D6DB"
+                : "#D2D6DB",
+          }}
+        >
+          {/* Custom bullet point */}
+          <span
+            style={{
+              display: "inline-block",
+              width: "9px",
 
-  //   // Customize based on month view
-  //   if (eventInfo.view.type === "dayGridMonth") {
-  //     return (
-  //       <div
-  //         style={{
-  //           padding: "2px 4px",
-  //           fontSize: "11px",
-  //           lineHeight: "1.2",
-  //           overflow: "hidden",
-  //           textOverflow: "ellipsis",
-  //           whiteSpace: "nowrap",
-  //           backgroundColor:
-  //             status === "Success"
-  //               ? "#87EFAC"
-  //               : status === "Pending"
-  //               ? "#FDD34D"
-  //               : status === "Cancelled"
-  //               ? "#D2D6DB"
-  //               : "#D2D6DB",
-  //         }}
-  //       >
-  //         {/* Custom bullet point */}
-  //         <span
-  //           style={{
-  //             display: "inline-block",
-  //             width: "9px",
+              height: "9px",
+              borderRadius: "50%",
+              backgroundColor: colorByTime || "#3788d8",
+              marginRight: "4px",
+            }}
+          />
 
-  //             height: "9px",
-  //             borderRadius: "50%",
-  //             backgroundColor: colorByTime || "#3788d8",
-  //             marginRight: "4px",
-  //           }}
-  //         />
+          {/* Time display */}
+          {event.start && (
+            <span style={{ fontWeight: "bold", color: "#666" }}>
+              {dayjs(event.start).format("HH:mm")}
+            </span>
+          )}
 
-  //         {/* Time display */}
-  //         {event.start && (
-  //           <span style={{ fontWeight: "bold", color: "#666" }}>
-  //             {dayjs(event.start).format("HH:mm")}
-  //           </span>
-  //         )}
+          {/* Event title (truncated) */}
+          <span style={{ marginLeft: "4px", color: "#666" }}>
+            {event.title.length > 25
+              ? `${event.title.substring(0, 25)}...`
+              : event.title}
+          </span>
 
-  //         {/* Event title (truncated) */}
-  //         <span style={{ marginLeft: "4px" }}>
-  //           {event.title.length > 25
-  //             ? `${event.title.substring(0, 25)}...`
-  //             : event.title}
-  //         </span>
+          {/* User indicator */}
+          {user && (
+            <span
+              style={{
+                fontSize: "12px",
+                color: "#000000",
+                marginLeft: "4px",
+              }}
+            >
+              ({user.title.split(" ")[0]})
+            </span>
+          )}
+        </div>
+      );
+    } else {
+      // Detailed view (timeGridDay, timeGridWeek)
 
-  //         {/* User indicator */}
-  //         {user && (
-  //           <span
-  //             style={{
-  //               fontSize: "12px",
-  //               color: "#000000",
-  //               marginLeft: "4px",
-  //             }}
-  //           >
-  //             ({user.title.split(" ")[0]})
-  //           </span>
-  //         )}
-  //       </div>
-  //     );
-  //   } else if (eventInfo.view.type === "multiMonthYear") {
+      //  Default  style
+      return (
+        <div
+          style={{
+            padding: "2px 4px",
+            fontSize: "14px",
+            lineHeight: "1.2",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {/* Custom bullet point */}
 
-  //     //  if event count > 2 make more button
-  //     console.log(eventInfo.eventCount,"eventInfo.eventCount")
-  //     if (eventInfo.eventCount > 2) {
-  //       return (
-  //         <button
-  //           style={{
-  //             padding: "2px 4px",
-  //             fontSize: "12px",
-  //             backgroundColor: "#f0f0f0",
-  //             border: "none",
-  //             borderRadius: "3px",
-  //             cursor: "pointer",
-  //           }}
-  //           onClick={() => {
-  //             // Handle "more" button click
-  //           }}
-  //         >
-  //           More
-  //         </button>
-  //       );
-  //     }
-  //   }
+          {/* Time display */}
+          {event.start && (
+            <>
+              <div>
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: "9px",
+                    height: "9px",
+                    borderRadius: "50%",
+                    backgroundColor: "#fff",
+                    marginRight: "4px",
+                  }}
+                /> 
+                <span style={{ fontWeight: "bold" }}>
+                  {dayjs(event.start).format("HH:mm")}
+                </span>
+              </div>
+            </>
+          )}
+          {/* Event title (truncated) */}
+          <span style={{ marginLeft: "4px" }}>
+            {event.title.length > 25
+              ? `${event.title.substring(0, 25)}...`
+              : event.title}
+          </span>
+        </div>
+      );
+    }
+  };
 
-  //   // Default rendering for other views
-  //   const renderEvent = (event: CalendarEvent) => {
-  //     return (
-  //       <div>
-  //         <b>{dayjs(event.start).format("HH:mm")}</b>
-  //         <i>{event.title}</i>
-  //       </div>
-  //     );
-  //   };
-  //   return renderEvent(event);
-  // };
+  const renderMoreLinkContent = (arg: { num: number }) => {
+    if (currentView === "dayGridMonth") {
+      return `+${arg.num} more`;
+    } else if (currentView === "multiMonthYear") {
+      return `+${arg.num} more  `;
+    }
+  };
 
   // Store the original/full events list separately from filtered view
   const [allEvents, setAllEvents] = useState(() => {
@@ -355,7 +373,6 @@ export default function Calendar() {
   ]);
 
   const [selectedUser, setSelectedUser] = useState<number[] | null>([]);
-  console.log("🚀 ~ selectedUser:", selectedUser);
   const [eventDetail, setEventDetail] = useState({
     title: "",
     start: new Date(),
@@ -367,18 +384,8 @@ export default function Calendar() {
   });
   const [eventDetailModal, setEventDetailModal] = useState(false);
   const [eventEditModal, setEventEditModal] = useState(false);
-  // const [selectedEvent, setSelectedEvent] = useState<{
-  //   title: string;
-  //   start: Date;
-  //   end?: Date;
-  //   id: string;
-  //   color?: string;
-  //   key?: string;
-  //   userId?: number;
-  // } | null>(null);
 
   const [selectedEvent, setSelectedEvent] = useState<EventItem[]>([]);
-  console.log("🚀 ~ selectedEvent:", selectedEvent);
 
   const [editingEvent, setEditingEvent] = useState<{
     title: string;
@@ -770,13 +777,6 @@ export default function Calendar() {
     });
   };
 
-  // const handleDateClick = (date: Date) => {
-  //   const calendarApi = calendarRef.current?.getApi();
-  //   if (calendarApi) {
-  //     calendarApi.changeView("dayGridMonth", date);
-  //   }
-  // };
-
   const EventLimitModal = (
     <Modal
       title="Event Limit Reached"
@@ -987,6 +987,19 @@ export default function Calendar() {
           type="primary"
         >
           More Detail
+        </Button>,
+
+        <Button
+          key="Remove"
+          onClick={() => {
+            if (eventDetail) {
+              handleEventRemove(eventDetail.id);
+            }
+          }}
+          color="danger"
+          variant="dashed"
+        >
+          <CloseCircleOutlined /> Remove
         </Button>,
       ]}
       width={600}
@@ -1277,6 +1290,17 @@ export default function Calendar() {
                     timeGridPlugin,
                     interactionPlugin,
                   ]}
+                  // weekends={false}
+                  // selectConstraint="businessHours"
+                  // eventConstraint="businessHours"
+                  // businessHours={{
+                  //   daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
+                  //   startTime: "06:00",
+                  //   endTime: "22:00",
+                  // }}
+                  eventDisplay={
+                    currentView === "multiMonthYear" ? "block" : "block"
+                  }
                   initialView="dayGridMonth"
                   editable={true}
                   droppable={true}
@@ -1405,7 +1429,8 @@ export default function Calendar() {
                     }
                   }}
                   dateClick={handleDateClick}
-                  // eventContent={renderEventContent} // Add this line
+                  eventContent={(info) => renderEventContent(info)} // Add this line
+                  eventColor="#3788d8"
                   datesSet={updateMonthTitles} // runs on view change
                   eventAdd={updateMonthTitles} // runs when new event is added
                   eventChange={() => {}} // runs when event changes
@@ -1420,6 +1445,11 @@ export default function Calendar() {
                   eventDidMount={() => {
                     console.log("Event mounted");
                   }}
+                
+
+               
+                  // Placeholder for cleanup if needed
+                  moreLinkContent={renderMoreLinkContent}
                 />
               </div>
             </div>
